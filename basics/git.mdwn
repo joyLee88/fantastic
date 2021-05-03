@@ -1,0 +1,28 @@
+git作为分布式版本控制系统；人人都是一台完整都资源库、没有理论上的中央服务器；不用联网；分支管理强大；
+
+git 安装 mac-- xcode
+    “Xcode”->“Preferences”，在弹出窗口中找到“Downloads”，选择“Command Line Tools”，点“Install”就可以完成安装
+
+配置
+    git config --global user.name "xxx"
+    git config --global user.email "xxx@qq.com"
+
+    cd ~ 回到当前用户目录
+    pwd 查看当前目录
+    cat .gitconfig 检查配置是否成功
+
+    密钥配置：
+        cd ~/.ssh 查看是否有此文件夹，有则备份删除
+        ssh-keygen -t rsa 生成密钥
+            可直接回车默认文件名id_rsa；回车默认空密码
+        再次
+        cd ~/.ssh看是否生成
+        open . 进入目录后，打开该文件夹
+        ssh-add -K id_rsa 添加该密钥;我取名为E，所以用文件名E
+        cat id_rsa.pub 查看公钥,并复制下来
+
+        最后将生成的公钥添加到GitHub上：右上角头像/setting/左边栏目中选择，添加即可
+
+        ssh git@github.com 命令测试是否连接成功
+
+github用于托管代码
