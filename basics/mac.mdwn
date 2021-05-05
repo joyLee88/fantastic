@@ -1,0 +1,5 @@
+ls  文件列表
+command shift . 切换显示隐藏文件
+mkdir xxx   创建文件夹xxx
+rm xx.xx    删除文件
+pwd 查看当前目录

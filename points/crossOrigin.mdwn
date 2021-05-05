@@ -1,0 +1,28 @@
+跨域
+    通过名字就知道，在一个域名网页下访问了其他域名的资源。
+    当然这种事不能太随便吧，防止XSS（跨站脚本攻击）、CSRF（跨站请求伪造），所以浏览器有一套安全策略“同源策略”：
+        大概就是只能访问相同协议、域名、端口号的网页资源，认为是同源的。
+    但是，实际应用中，不可能都是同源访问，工作以来大概有几种情况。
+
+    1.jsonp
+    大概都手写过jsonp，明白原理，就很简单。
+    一种get方式，由于script不存在跨域问题，那么就通过动态插入script，带参执行回调的方式。
+
+    <script>
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = 'http://www.xxx.com/login?callback=fnCb';
+        document.head.appendChild(script);
+
+        function fnCb(res) { //
+            console.log(res)
+        }
+    </script>
+    服务器返回，执行回调
+    
+    2.postMessage跨域
+
+    3.nginx代理跨域
+
+    4.cors
+    前端普通ajax请求即可，服务器代码解决跨域，设置access-control-allow-origin头信息

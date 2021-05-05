@@ -1,5 +1,7 @@
-git作为分布式版本控制系统；人人都是一台完整都资源库、没有理论上的中央服务器；不用联网；分支管理强大；
+git作为分布式版本控制系统；人人都是一台完整都资源库、没有理论上的中央服务器；不用联网就可工作；分支管理强大；有暂存区；管理修改
+github用于托管代码。
 
+### 基本环境
 git 安装 mac-- xcode
     “Xcode”->“Preferences”，在弹出窗口中找到“Downloads”，选择“Command Line Tools”，点“Install”就可以完成安装
 
@@ -13,7 +15,7 @@ git 安装 mac-- xcode
 
     密钥配置：
         cd ~/.ssh 查看是否有此文件夹，有则备份删除
-        ssh-keygen -t rsa 生成密钥
+        ssh-keygen -t rsa 生成密钥; id_rsa是私钥，id_rsa.pub是公钥
             可直接回车默认文件名id_rsa；回车默认空密码
         再次
         cd ~/.ssh看是否生成
@@ -23,6 +25,147 @@ git 安装 mac-- xcode
 
         最后将生成的公钥添加到GitHub上：右上角头像/setting/左边栏目中选择，添加即可
 
-        ssh git@github.com 命令测试是否连接成功
+        ssh git@github.com 命令测试是否连接成功 
 
-github用于托管代码
+### 理解
+    仓库.git：
+        跟踪管理版本库；默认隐藏，ls -ah命令可看见；
+    工作区：
+        本地目录，如仓库文件夹
+    版本库：
+        工作区的.git；
+        存储stage暂存区：git add； 分支
+
+    工作区-- git add --> 版本库（暂存区-- git commit --> 当前分支)
+
+    分支:
+        一条时间线
+        主分支master
+        各个分支指针指向各个分支最新的提交，HEAD指向最新提交到分支指针
+
+        分支策略：
+            master发布稳定版本
+            dev进行开发
+            实际开发中有需求复杂，以上是保证基本策略。
+    
+    标签tag：
+        用来快速找出某个时刻的发布的版本，指向某个分支；
+        切换到分支，再打标签
+
+
+##### 命令
+ git init
+    git仓库初始化
+git diff
+    查看工作区和版本库里面最新版本区别
+git add xx
+    把文件添加到仓库，添加到暂存区
+git status
+    查看工作区的状态
+git checkout -- file
+    -- 表示非分支，是文件操作；工作区内容撤销丢弃
+        工作区修改，未git add 暂存区空，撤销修改到版本库一样
+        工作区修改，有过git add，暂存区有内容，撤销修改到暂存区一样
+git commit -m "xxx"
+    把文件提交到仓库，可提交多次add的文件；一次commit类似一个快照；
+    把暂存区内容提交到当前分支；提交后暂存区为空的
+git log
+    查看提交的commit日志，可以看到每个commit的id
+git reset --hard HEAD^
+    回退到上一个版本；HEAD指针指向当前版本，HEAD^ HEAD^^ HEAD~100
+    若是后悔了，没有关掉上条git log命令窗口(所以回退前最好git log)，或是git reflog，找到版本号，同样可以回去
+git reset HEAD <file>
+    HEAD最新版本，暂存区内容回退到工作区
+git push -u origin master
+    把当前分支master推送到远程origin，-u参数把第一次内容推送到远程新的master分支，关联本地master和远程master分支
+git checkout -b xx ------ git switch -c xx
+    创建xx分支，并切换，即：
+        git branch xx   创建XX
+        git checkout xx 切换到xx  ----- git switch xx
+git branch
+    查看当前分支
+git merge xx
+    合并xx分支到本分支
+git branch -d xx
+    删除xx分支，D是强行删除
+git rebase
+    把本地未push到分叉提交历史，整理成直线；
+    将历史提交变化更清晰，方便三方对比
+git tag
+    查看所有标签
+    git tag <name> 打标签，默认最新commit
+    git tag v0.9 commitId 给某个提交打标签
+    git show v0.9 查看该标签的信息
+    git tag -a v0.1 -m "说明文字" commitID -a指定标签名-m指定说明文字
+        标签总是和某个commit挂钩，标签可以在多个分支看到
+    git tag -d <name>
+        删除本地标签；创建的标签存储在本地，不会自动推送到远程；
+        要删除远程标签的话
+            git push origin :refs/tags/<name>
+    git push origin <tagname>
+        推送某个标签到远程
+    git push origin --tags
+        一次性推送全部未推送的本地标签
+
+关联本地仓库和github仓库，默认给远程库指定名字origin
+    git remote add origin url
+修改远程仓库地址：
+    git remote set-url origin url
+
+    git remote rm origin
+    git remote add origin url
+
+    修改.git配置
+克隆远程仓库到本地
+    git clone url
+查看远程仓库地址
+    git remote -v
+删除远程库,此处的意思是解除本地和该远程库的绑定关系，要删除远程库，在github操作
+    git remote rm <name>
+当前有修改未完成，但急着改其他模块
+    git stash 保存当前工作现场；改完后，恢复工作现场 git stash pop
+冲突
+    冲突抓下来，手动解决冲突
+    
+
+### 私有git管理
+    .付费github
+    .手动搭建git服务器
+        准备：
+            一台Linux机器（ubuntu或debian）
+            有sudo权限的用户账户
+        安装：
+            sudo apt-get install git  安装git
+            sudo adduser git 创建git用户，运行git服务
+            导入开发用户的公钥id_rsa.pub文件，到/home/git/.ssh/authorized_keys里，一行一个
+                团队太大，使用Gitosis来管理公钥
+            选定一个目录初始化git仓库
+                sudo git init --bare sample.git
+                创建了一个裸仓库，没有工作区，为了共享，不会让用户直接修改。
+                服务器上的git仓库通常以.git结尾，把owner改为git
+                sudo chown -R git:git sample.git
+            禁用shell登录
+                导入的用户不能登录shell，通过编辑/etc/passwd，找到如下
+                    git:x:1001:1001:,,,:/home/git:/bin/bash
+                    改为
+                    git:x:1001:1001:,,,:/home/git:/user/bin/git-shell
+                    为git用户指定git-shell每登录就自动退出，即用户无法登录shell，可通过ssh使用git
+            克隆远程库
+                git clone git@server:/srv/sample.git
+        
+        管理
+            git不支持权限控制，但支持钩子hook
+                使用Gitolite工具，在服务器端编写一系列脚本来控制提交等操作，从而控制权限。
+
+
+### 国内git托管——gitee
+
+### 自定义Git
+    设置git显示颜色
+        git config --global color.ui true
+    自动忽略某些文件
+        根目录.gitignore文件
+    配置简易命令
+        git config --global alias.xx status  将git status改成git xx
+
+    

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>呵</title>
+    </head>
+    <body>
+        <script type="text/javascript" src="./points/jsonp.js"></script>
+        <script>
+            jsonp({
+                url: './test.json',
+                cbName: 'cbfn',
+                data: {
+                    user: 'joy'
+                },
+                success: (res) => {
+                    console.log('dddd')
+                }
+            })
+        </script>
+    </body>
+</html>
