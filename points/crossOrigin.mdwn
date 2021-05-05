@@ -23,6 +23,20 @@
     2.postMessage跨域
 
     3.nginx代理跨域
+    测试的时候，用到一些其他域名的资源，简单整理一个
+    server{
+        # 监听8080端口
+        listen 8080;
+        # 域名是localhost
+        server_name localhost;
+        #凡是localhost:8080/api这个样子的，都转发到真正的服务端地址http://www.b.com:8080 
+        location ^~ /api {
+            proxy_pass http://www.b.com:8080;
+        }    
+    }
 
     4.cors
     前端普通ajax请求即可，服务器代码解决跨域，设置access-control-allow-origin头信息
+
+    没用过的，看到这个总结的不错：
+        https://segmentfault.com/a/1190000011145364
