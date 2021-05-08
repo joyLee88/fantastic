@@ -1,0 +1,56 @@
+<!-- <script type="text/javascript" src="./src/index.js"></script> -->
+
+<!-- 代码字符串，执行： new function;  eval() -->
+<script>
+    // 执行代码字符串，防止污染
+    /*var exports = {};
+    (function(exports, code) {
+        eval(code)
+    })(exports, 'exports.default = (a, b) => a+b')
+    console.log(exports.default(2,8));*/
+
+    // 模拟require函数
+    /*function require(file) {
+        var exports = {};
+        (function(exports, code) {
+            eval(code)
+        })(exports, 'exports.default = (a, b) => a+b')
+        return exports;
+    }
+    var add = require('./src/add.js').default;
+    console.log(add(1,8));*/
+
+    // 演化总结为：bundle.js 打包后的结果
+    // 多个文件
+    (function(list) {
+        function require(file) {
+            var exports = {};
+            (function(exports, code) {
+                eval(code)
+            })(exports, list[file])
+            return exports;
+        }
+        require('index.js') // 通过key就找到代码
+    })({
+        'index.js': `
+            var add = require('add.js').default;
+            console.log(add(1,8));
+        `,
+        'add.js': `exports.default = (a, b) => a+b`
+    })
+
+    /*
+    所以:
+        1.要收集依赖
+        2.ES6转ES5
+        3.替换require和exports
+        4.最后require入口文件
+
+        安装
+            npm install @babel/parser
+            npm install @babel/traverse
+            npm install @babel/core
+            npm install @babel/preset-env
+
+    */
+</script>
