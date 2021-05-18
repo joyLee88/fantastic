@@ -1,0 +1,12 @@
+有些组件没有必要重复初始化，组件缓存
+keepalive是一个抽象组件，缓存vnode，缓存的组件不会重走生命周期。
+被包含在 keep-alive 中创建的组件，会多出两个生命周期的钩子: activated 与 deactivated：
+    如从列表页跳到详情页
+    include=”a,b”是需要缓存name为a或b的组件；
+	exclude是除了某些组件都缓存，优先级高些；
+    max
+ 	<keep-alive> 
+        <router-view> 
+        <!-- 所有路径匹配到的视图组件都会被缓存！ --> 
+        </router-view> 
+    </keep-alive>

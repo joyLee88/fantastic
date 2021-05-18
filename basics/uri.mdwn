@@ -65,6 +65,7 @@ URL
         HTTP 缓存又分为强缓存和协商缓存：
     
         首先通过 Cache-Control 验证强缓存是否可用，如果强缓存可用，那么直接读取缓存
+            response头，cache-control（缓存开关）字段验证是否可用，请求头也可以模拟，勾选disable chche
         如果不可以，那么进入协商缓存阶段，发起 HTTP 请求，服务器通过请求头中是否带上
     If-Modified-Since 和 If-None-Match 这些条件请求字段检查资源是否更新：
             . 若资源更新，那么返回资源和 200 状态码

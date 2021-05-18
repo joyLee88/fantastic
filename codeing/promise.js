@@ -260,6 +260,28 @@ class MyPromise {
     }
 }
 
+// 简易版promiseAll
+function promiseAll(arr) {
+    return new Promise((resolve, reject) => {
+        if (!Array.isArray(arr)) {
+            return reject(new Error('参数错误，必须是数组'))
+        }
+        const res = [];
+        const len = arr.length;
+        const counter = 0;
+        for (let i = 0; i < len; i++) {
+            Promise.resolve(arr[i]).then(r => {
+                counter++;
+                res[i] = r;
+                if (counter === len) {
+                    resolve(res)
+                }
+            }).catch(e => reject(e));
+        }
+    })
+}
+
+
 // ES7  async、await将异步强行转换为同步处理。
 // async/await与promise不存在谁代替谁的说法，因为async/await是寄生于Promise，是Generater的语法糖。
     // async 声明一个函数是异步的；

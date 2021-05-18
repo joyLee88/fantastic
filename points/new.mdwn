@@ -1,0 +1,10 @@
+感觉像继承
+1.不用手动新建一个obj ，new会帮你创建
+
+2.不用把新建的obj的__proto__指向构造函数Common的prototype,new会帮你做。
+
+3.构造函数this的作用域会指向实例本身。
+
+4.不用手动return新建的obj，new会帮你return。
+
+5.new出来的实例的__proto__会指向构造函数的prototype。构造函数的方法，实例可以直接调用。

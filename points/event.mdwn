@@ -1,2 +1,7 @@
 About event:
     firstly, javascript code is excuting sequentially.
+
+# event
+
+
+# event loop

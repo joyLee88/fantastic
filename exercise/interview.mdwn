@@ -1,0 +1,80 @@
+# Object.prototype.toString.call(null) // “[object null]” 判断最完整
+# typeof
+除了null的基本类型、object、function
+# instanceof X
+检测实例的原型是否该构造函数X的prototype
+function newInstanceOf(left, right) {
+    let rightProto = right.prototype;
+    let leftP = left.__proto__;
+    while(true) {
+        if (leftP === null) return false;
+        if (leftP === rightProto) return true;
+        leftP = leftP.__proto__;
+    }
+}
+# Array.isArray()   isNaN()
+
+# 原型
+内置属性__proto__ ，指向创建它的构造函数的原型对象
+对象之间通过__proto__连接起来的对象链， 当前对象找不到该属性，往上找，直到null。
+任何对象都具有隐式原型属性（__proto__），只有函数对象有显式原型属性（prototype）
+
+# 继承
+父类.call(this)
+子类prototype = Object.create(父类prototype);
+子类constructor指向自己
+
+Extends  super 类似call 执行父类构造函数
+
+# new 关键字
+新生一个对象——其__proto指向构造函数的原型——构造函数作用域赋给新对象，绑定this——为新对象添加属性，执行构造函数——返回对象
+Var obj = {};
+Obj.__proto__ = Person.prototype;
+Person.call(obj);
+Return obj;
+
+# 事件循环机制
+Js是单线程语言，通过事件循环机制模拟异步操作。
+
+# 事件机制
+冒泡和捕获
+委托
+
+# Webpack
+
+# Vue
+# Vuex
+# Package
+Dependencies 在生产环境中需要用到的依赖
+devDependencies 在开发、测试环境中用到的依赖 ,babel\eslint\vue-loader\webpack
+# Router
+# Axios
+# Vue keeplive缓存
+有些组件没有必要重复初始化，组件缓存
+keepalive是一个抽象组件，缓存vnode，缓存的组件不会重走生命周期。
+被包含在 keep-alive 中创建的组件，会多出两个生命周期的钩	子: activated 与 deactivated：
+如从列表页跳到详情页
+include=”a,b”是需要缓存name为a或b的组件；
+	exclude是除了某些组件都缓存，优先级高些；
+max
+ 	<keep-alive> 
+<router-view> 
+<!-- 所有路径匹配到的视图组件都会被缓存！ --> 
+</router-view> 
+</keep-alive>
+
+# 组件化
+组件自调用
+组件component install
+
+# Git
+# Promise
+# Js缓存
+强缓存： response头，cache-control（缓存开关）字段验证是否可用，请求头也可以模
+拟，勾选disable chche
+协商缓存：读取不到强缓存，发送请求，请求头带上If-Modified-Since和If-None-Match，	服务器判断是否需要更新。
+# 冒泡
+# 快排
+# 防抖
+# 节流
+
