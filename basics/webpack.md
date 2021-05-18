@@ -207,7 +207,10 @@ Vue UI组件库的按需加载 为了快速开发前端项目，经常会引入�
 
 
 
-
+收集依赖
+ES6-》ES5
+替换require和export
+require入口文件
 
 
 
