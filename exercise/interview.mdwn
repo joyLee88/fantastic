@@ -34,17 +34,43 @@ Person.call(obj);
 Return obj;
 
 # 事件循环机制
-Js是单线程语言，通过事件循环机制模拟异步操作。
+Js是单线程语言，本质是通过回调函数模拟异步操作。要实现非阻塞，通过事件循环机制。
+事件循环机制分三部分：主线程、宏任务队列、微任务队列
+执行主线程（遇到宏任务放宏任务、遇到微任务放微任务）——执行微任务——执行宏任务（创建并添加微任务）——执行微任务——UI render——下一轮
 
 # 事件机制
-冒泡和捕获
-委托
+事件源、事件、事件监听
+Js事件驱动的语言，如按钮点击等
+Dom有4次更新，DOM 0级事件处理，DOM 2级事件处理和DOM 3级事件处理。
+Dom0:  onevent
+Dom2: 	addEventListener   removeEventListener
+Dom3:	添加了更多事件类型，load\scroll\blur\focus.....
+
+事件流：网页元素接收事件的顺序，分为两种机制：冒泡和捕获
+当一个事件发生后，会在子元素和父元素之间传播（propagation）。这种传播分成三个阶段：
+捕获阶段：事件从window对象自上而下向目标节点传播的阶段；
+目标阶段：真正的目标节点正在处理事件的阶段；
+冒泡阶段：事件从目标节点自下而上向window对象传播的阶段。
+
+Dom.addEventListener(‘click’, function(){}, true)
+第三个参数是一个布尔值，当为true时，表示在捕获阶段调用事件处理程序，为false时，表示在冒泡阶段调用事件处理程序
+所以，事件流发生在父元素和子元素之间，而不是两个同级的元素。
+
+事件委托：给父级元素注册事件，监听子元素的点击事件
 
 # Webpack ??
 	基本修改
 
 # Vue
+建立虚拟DOM tree，通过createDocumentFragment，遍历指定根节点内部节点，根据{{prop}}
 # Vuex
+专门vue开发的状态管理。对需要共享的数据进行集中式管理。
+默认的五种基本的对象：
+state：存储状态（变量）
+getters：对数据获取之前的再次编译，可以理解为state的计算属性。我们在组件中使用 $sotre.getters.fun()
+mutations：修改状态，并且是同步的。在组件中使用$store.commit('',params)。这个和我们组件中的自定义事件类似。
+actions：异步操作。在组件中使用是$store.dispath('')
+modules：store的子模块，为了开发大型项目，方便状态管理而使用的。这里我们就不解释了，用起来和上面的一样。
 # Package
 Dependencies 在生产环境中需要用到的依赖
 devDependencies 在开发、测试环境中用到的依赖 ,babel\eslint\vue-loader\webpack
@@ -65,15 +91,31 @@ max
 </keep-alive>
 
 # 组件化
+高复用、高可维护性的代码封装。防止耦合。
+
+功能组件：基础功能组件、通用UI组件、基础业务组件
+
+模块化：同一功能、同一业务，独立的功能和项目，多组件组成模块，多模块组成业务框架
+
+Vue组件：页面组件、UI组件、基础业务组件
+prop,自定义事件,slot是组成组件的三个重要因素。
+prop用于定义组件的属性。
+和prop不同，$refs 着重与索引，主要用于调用子组件里面的属性和方法
+自定义事件用于触发组件的事件。
+slot用于组件功能的扩展。
+
+有空看看$attrs 和$listeners 
+Bus，初始化全局事件总线：
+新建bus.js，引入vue，new vue 挂载到vue原型上。
+要用的地方，引入bus.js即可
 组件自调用
 组件component install
 
 # Git
 # Promise
 # Js缓存
-强缓存： response头，cache-control（缓存开关）字段验证是否可用，请求头也可以模
-拟，勾选disable chche
-协商缓存：读取不到强缓存，发送请求，请求头带上If-Modified-Since和If-None-Match，	服务器判断是否需要更新。
+强缓存： response头，cache-control（缓存开关）字段验证是否可用，请求头也可以模拟，勾选disable chche
+协商缓存：读取不到强缓存，发送请求，请求头带上If-Modified-Since和If-None-Match，服务器判断是否需要更新。
 # 冒泡
 # 快排
 # 防抖
