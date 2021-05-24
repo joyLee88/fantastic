@@ -1,1 +1,12 @@
 类型检测
+
+开发：
+    vue-cli  4.x
+    在已存在js项目安装typescript
+        vue add @vue/typescript
+            use class-style
+            use Babel alongside typescript
+    组件编写
+        ts编写有3种常用方式 Vue.extend()、@component、tsx
+    
+    @component

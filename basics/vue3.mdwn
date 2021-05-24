@@ -1,0 +1,354 @@
+
+
+# 搭建vite构建+ts
+## nodejs >= 12.0
+        node -v
+        window可装nvm
+            nvm install stable 安装node最新稳定版
+## 初始化，启动
+        > 1. npm init @vitejs/app
+            选定ts
+          或可以直接指定尝试一下
+            npm init @vitejs/app viteTest --template vue-ts
+        > 2. cd viteTest
+        > 3. npm install
+        > 4. npm run dev
+## 项目集成，架构搭建：
+        > 1. 修改vite配置文件 vite.config.ts（项目启动会自动读取）
+            @指向src目录、服务启动端口、打包路径、代理等
+            import { defineConfig } from 'vite'
+            import vue from '@vitejs/plugin-vue'
+            // 如果编辑器提示 path 模块找不到，则可以安装一下 @types/node -> npm i @types/node -D
+            import { resolve } from 'path'
+
+            // https://vitejs.dev/config/
+            export default defineConfig({
+            plugins: [vue()],
+            resolve: {
+                alias: {
+                '@': resolve(__dirname, 'src') // 设置 `@` 指向 `src` 目录
+                }
+            },
+            base: './', // 设置打包路径
+            server: {
+                port: 4000, // 设置服务启动端口号
+                open: true, // 设置服务启动时是否自动打开浏览器
+                cors: true // 允许跨域
+
+                // 设置代理，根据我们项目实际情况配置
+                // proxy: {
+                //   '/api': {
+                //     target: 'http://xxx.xxx.xxx.xxx:8000',
+                //     changeOrigin: true,
+                //     secure: false,
+                //     rewrite: (path) => path.replace('/api/', '/')
+                //   }
+                // }
+            }
+            })
+        > 2. 规范目录结构
+            ├── publish/
+            └── src/
+                ├── assets/                    // 静态资源目录
+                ├── common/                    // 通用类库目录
+                ├── components/                // 公共组件目录
+                ├── router/                    // 路由配置目录
+                ├── store/                     // 状态管理目录
+                ├── style/                     // 通用 CSS 目录
+                ├── utils/                     // 工具函数目录
+                ├── views/                     // 页面组件目录
+                ├── App.vue
+                ├── main.ts
+                ├── shims-vue.d.ts
+            ├── tests/                         // 单元测试目录
+            ├── index.html
+            ├── tsconfig.json                  // TypeScript 配置文件
+            ├── vite.config.ts                 // Vite 配置文件
+            └── package.json
+        > 3. 集成路由工具
+            >> vue3的路由工具安装
+                npm i vue-router@4
+            >> 创建src/router/index.ts  路由配置文件，在views里预先添加页面组件home.vue、 vuex.vue、 axio.vue
+                import {
+                    createRouter,
+                    createWebHashHistory,
+                    RouteRecordRaw
+                } from 'vue-router'
+                import Home from '@/views/home.vue'
+                import Vuex from '@/views/vuex.vue'
+
+                const routes: Array<RouteRecordRaw> = [
+                {
+                    path: '/',
+                    name: 'Home',
+                    component: Home
+                },
+                {
+                    path: '/vuex',
+                    name: 'Vuex',
+                    component: Vuex
+                },
+                {
+                    path: '/axios',
+                    name: 'Axios',
+                    component: () => import('@/views/axios.vue') // 懒加载组件
+                }
+                ]
+
+                const router = createRouter({
+                    history: createWebHashHistory(),
+                    routes
+                })
+
+                export default router
+            >> 在main.ts挂载路由配置
+                import { createApp } from 'vue'
+                import App from './App.vue'
+
+                import router from './router/index'
+
+                createApp(App).use(router).mount('#app')
+        
+        > 4. 集成状态管理工具vuex
+            >> 支持vue3状态管理工具
+                npm i vuex@next
+            >> 创建src/store/index.ts
+                import { createStore } from 'vuex'
+                const defaultState = {
+                    count: 0
+                }
+
+                // Create a new store instance.
+                export default createStore({
+                    state() {
+                        return defaultState
+                    },
+                    mutations: {
+                        increment(state: typeof defaultState) {
+                            state.count++
+                        }
+                    },
+                    actions: {
+                        increment(context) {
+                            context.commit('increment')
+                        }
+                    },
+                    getters: {
+                        double(state: typeof defaultState) {
+                            return 2 * state.count
+                        }
+                    }
+                })
+            >> 在main.ts挂载vuex
+                import { createApp } from 'vue'
+                import App from './App.vue'
+
+                import store from './store/index'
+
+                createApp(App).use(store).mount('#app')
+        
+        > 5. 集成UI框架Element Plus
+            >> 安装支持vue3的UI框架
+                npm i element-plus
+            >> 在main.ts中挂载上
+                import { createApp } from 'vue'
+                import App from './App.vue'
+
+                import ElementPlus from 'element-plus'
+                import 'element-plus/lib/theme-chalk/index.css'
+
+                createApp(App).use(ElementPlus).mount('#app')
+        > 6. 集成HTTP工具Axios
+            >> 直接安装axios
+                npm i axios
+            >> src/utils存储工具函数，所以创建axios.ts
+                import Axios from 'axios'
+                import { ElMessage } from 'element-plus'
+
+                const baseURL = 'https://api.github.com'
+
+                const axios = Axios.create({
+                baseURL,
+                timeout: 20000 // 请求超时 20s
+                })
+
+                // 前置拦截器（发起请求之前的拦截）
+                axios.interceptors.request.use(
+                (response) => {
+                    /**
+                    * 根据你的项目实际情况来对 config 做处理
+                    * 这里对 config 不做任何处理，直接返回
+                    */
+                    return response
+                },
+                (error) => {
+                    return Promise.reject(error)
+                }
+                )
+
+                // 后置拦截器（获取到响应时的拦截）
+                axios.interceptors.response.use(
+                (response) => {
+                    /**
+                    * 根据你的项目实际情况来对 response 和 error 做处理
+                    * 这里对 response 和 error 不做任何处理，直接返回
+                    */
+                    return response
+                },
+                (error) => {
+                    if (error.response && error.response.data) {
+                    const code = error.response.status
+                    const msg = error.response.data.message
+                    ElMessage.error(`Code: ${code}, Message: ${msg}`)
+                    console.error(`[Axios Error]`, error.response)
+                    } else {
+                    ElMessage.error(`${error}`)
+                    }
+                    return Promise.reject(error)
+                }
+                )
+
+                export default axios
+            >> 需要使用axio的地方，引入该配置文件
+                import { defineComponent } from 'vue'
+                import axios from '../utils/axios'
+
+                export default defineComponent({
+                    setup() {
+                    axios
+                        .get('/users/XPoet')
+                        .then((res) => {
+                            console.log('res: ', res)
+                        })
+                        .catch((err) => {
+                            console.log('err: ', err)
+                        })
+                    }
+                })
+
+        7. 集成css预编译器stylus/Sass/Less
+            >> 安装开发依赖即可
+                npm i stylus -D
+                npm i sass -D
+                npm i less -D
+            >> 使用
+                <style lang="stylus">
+                    ...
+                </style>
+
+## 代码规范
+使用EditorConfig + Prettier + ESLint 组合来实现代码规范化
+    1. 集成EditorConfig配置
+    有助于为不同 IDE 编辑器上处理同一项目的多个开发人员维护一致的编码风格。
+    在项目根目录下增加 .editorconfig 文件：
+        # Editor configuration, see http://editorconfig.org
+
+        # 表示是最顶层的 EditorConfig 配置文件
+        root = true
+
+        [*] # 表示所有文件适用
+        charset = utf-8 # 设置文件字符集为 utf-8
+        indent_style = space # 缩进风格（tab | space）
+        indent_size = 2 # 缩进大小
+        end_of_line = lf # 控制换行类型(lf | cr | crlf)
+        trim_trailing_whitespace = true # 去除行首的任意空白字符
+        insert_final_newline = true # 始终在文件末尾插入一个新行
+
+        [*.md] # 表示仅 md 文件适用以下规则
+        max_line_length = off
+        trim_trailing_whitespace = false
+    ( vscode需要下载插件 EditorConfig for VS Code )
+
+    2. 集成prettier配置
+    一款强大的代码格式化工具，支持 JavaScript、TypeScript、CSS、SCSS、Less、JSX、Angular、Vue、GraphQL、JSON、Markdown 等语言，基本上前端能用到的文件格式它都可以搞定，是当下最流行的代码格式化工具。避免因为大家编辑器配置不一样而导致格式化后的代码风格不统一的问题。
+    安装
+        npm i prettier -D
+    项目根目录下创建 .prettierrc 文件，Prettier 支持多种格式的配置文件如 .json、.yml、.yaml、.js等。
+        {
+            "useTabs": false,
+            "tabWidth": 2,
+            "printWidth": 100,
+            "singleQuote": true,
+            "trailingComma": "none",
+            "bracketSpacing": true,
+            "semi": false
+        }
+    命令启动格式化
+        # 格式化所有文件（. 表示所有文件）
+        npx prettier --write .
+    
+    ( VSCode 编辑器使用 Prettier 配置需要下载插件 Prettier - Code formatter  )
+
+    3. 集成ESLint配置
+    用于查找并报告代码中问题的工具，并且支持部分问题自动修复。其核心是通过对代码解析得到的 AST（Abstract Syntax Tree 抽象语法树）进行模式匹配，来分析代码达到检查代码质量和风格问题的能力。ESLint 为我们列出了三种社区流行的 JavaScript 风格指南，分别是 Airbnb、Standard、Google。
+    安装
+        npm i eslint -D
+    配置ESlint，执行命令，按照提示完成配置
+        npx eslint --init
+        如果自动安装失败，手动
+            npm i @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint-config-airbnb-base eslint-plugin-import eslint-plugin-vue -D
+    此时，根目录下有自动生成 .eslintrc.js 配置文件：
+        如果有额外的 ESLint 规则，也在此文件中追加。
+    （ VSCode 使用 ESLint 配置文件需要去插件市场下载插件 ESLint ）
+
+    一个个点击修复，麻烦。可以在保存设置风格修复—— 在vscode的settings.json文件中，，增加
+        "editor.codeActionsOnSave": {
+            "source.fixAll.eslint": true
+        }
+
+    4. 解决Prettier和ESLint冲突
+    ESLint 配置中使用了 Airbnb JavaScript 风格指南校验，其规则之一是_代码结束后面要加分号_，而我们在 Prettier 配置文件中加了_代码结束后面不加分号_的配置项，这样就有冲突了，会出现用 Prettier 格式化后的代码，ESLint 检测到格式有问题的，从而抛出错误提示。
+
+    解决两者冲突问题，需要用到 eslint-plugin-prettier 和 eslint-config-prettier。
+        eslint-plugin-prettier 将 Prettier 的规则设置到 ESLint 的规则中。
+        eslint-config-prettier 关闭 ESLint 中与 Prettier 中会发生冲突的规则。
+
+    最后形成优先级：Prettier 配置规则 > ESLint 配置规则。
+
+    安装插件
+        npm i eslint-plugin-prettier eslint-config-prettier -D
+        在 .eslintrc.js 添加 prettier 插件
+            module.exports = {
+                ...
+                extends: [
+                    'plugin:vue/essential',
+                    'airbnb-base',
+                    'plugin:prettier/recommended' // 添加 prettier 插件
+                ],
+                ...
+            }
+    从而，在执行 eslint --fix 命令时，ESLint 就会按照 Prettier 的配置规则来格式化代码，轻松解决二者冲突问题。
+
+## 提交预防
+团队可能会有些人觉得这些条条框框的限制很麻烦，选择视 “提示” 而不见，依旧按自己的一套风格来写代码，或者干脆禁用掉这些工具，开发完成就直接把代码提交到了仓库，日积月累，ESLint 也就形同虚设。
+所以，我们还需要做一些限制，让没通过 ESLint 检测和修复的代码禁止提交，从而保证仓库代码都是符合规范的。为了解决这个问题，我们需要用到 Git Hook，在本地执行 git commit 的时候，就对所提交的代码进行 ESLint 检测和修复（即执行 eslint --fix），如果这些代码没通过 ESLint 规则校验，则禁止提交。
+
+怎么实现呢？ 集成 husky + lint-staged
+    husky —— Git Hook 工具，可以设置在 git 各个阶段（pre-commit、commit-msg、pre-push 等）触发我们的命令。
+    lint-staged —— 在 git 暂存的文件上运行 linters。
+
+    1. 配置husky
+    使用 husky-init 命令快速在项目初始化一个 husky 配置
+        npx husky-init && npm install， 主要做了4件事
+            安装 husky 到开发依赖：package devDependencies
+            在项目根目录下创建 .husky 目录
+            在 .husky 目录创建 pre-commit hook，并初始化 pre-commit 命令为 npm test
+            修改 package.json 的 scripts，增加 "prepare": "husky install"
+    husky 包含很多 hook（钩子），常用有：pre-commit、commit-msg、pre-push。这里，我们使用 pre-commit 来触发 ESLint 命令。
+        修改 .husky/pre-commit hook 文件的触发命令：
+            eslint --fix ./src --ext .vue,.js,.ts
+
+            当我们执行 git commit -m "xxx" 时，会先对 src 目录下所有的 .vue、.js、.ts 文件执行 eslint --fix 命令，如果 ESLint 通过，成功 commit，否则终止 commit。
+
+    要做到只用 ESLint 修复自己此次写的代码，而不去影响其他的代码。所以我们还需借助一个神奇的工具 lint-staged 。
+
+    2. 配置 lint-staged
+    lint-staged 这个工具一般结合 husky 来使用，它可以让 husky 的 hook 触发的命令只作用于 git add那些文件（即 git 暂存区的文件），而不会影响到其他文件。
+    安装 lint-staged
+        npm i lint-staged -D
+    在 package.json里增加 lint-staged 配置项
+        "lint-staged": {
+            "*.{vue,js,ts}": "eslint --fix"
+        },
+        这行命令表示：只对 git 暂存区的 .vue、.js、.ts 文件执行 eslint --fix。
+    再修改.husky/pre-commit hook 的触发命令为：npx lint-staged
