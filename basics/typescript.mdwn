@@ -172,4 +172,72 @@ mySearch = function(source: string, subString: string) {
 将一个父类断言为更加具体的子类
 将任何一个类型断言为any
 将any断言为一个具体的类型
+    任何类型可以断言为any
+    any可以被断言为任何类型
 
+但是！并不是任何一个类型都可以断言为任何另一个类型！
+
+双重断言
+    as any as Foo
+
+## 9.声明文件
+要使用第三方库，需要引用声明文件。
+
+declare var 定义
+
+把声明语句放到一个单独文件，这就是声明文件，如jQuery.d.ts
+    声明文件必需以 .d.ts 为后缀。
+    declare var jQuery: (selector: string) => any;
+保证解析
+    检查下 tsconfig.json 中的 files、include 和 exclude 配置，确保其包含了 jQuery.d.ts 文件
+
+可以直接使用统一管理的第三方库声明文件
+    npm install @types/jquery --save-dev
+    可搜索其他
+        https://www.typescriptlang.org/dt/search?search=
+
+## 10.内置对象
+ECMAScript 标准提供的内置对象有：
+    Boolean、Error、Date、RegExp 等
+DOM 和 BOM 提供的内置对象有：
+    Document、HTMLElement、Event、NodeList 等
+
+    let body: HTMLElement = document.body;
+    let allDiv: NodeList = document.querySelectorAll('div');
+    document.addEventListener('click', function(e: MouseEvent) {
+    // Do something
+    });
+Node.js 不是内置对象的一部分，如果想用 TypeScript 写 Node.js，则需要引入第三方声明文件：
+    npm install @types/node --save-dev
+
+
+# 四、 进阶
+1. 类型别名
+为了给一个类型起个新名字，常用于联合类型。
+    用type创建
+
+2. 字符串字面量类型
+字符串字面量类型用来约束取值只能是某几个字符串中的一个。
+type EventNames = 'click' | 'scroll' | 'mousemove';
+    使用 type 定了一个字符串字面量类型 EventNames，它只能取三种字符串中的一种
+* 类型别名与字符串字面量类型都是使用 type 进行定义。
+
+3. 元组
+数组合并了相同类型的对象，而元组（Tuple）合并了不同类型的对象。
+定义一对值分别为 string 和 number 的元组：
+    let tom: [string, number] = ['Tom', 25];
+
+
+新建文件夹-》npm init -y
+安装ts
+    npm add typescript -D
+npm中的ts-node-dev
+    实时修改ts，即修即得
+    修改package
+        "scripts": {
+            "dev": "ts-node-dev --respawn --transpile-only ./demos/demos1.ts"
+        }
+添加tsconfig.json
+    {
+        "compileOptions": {}
+    }
