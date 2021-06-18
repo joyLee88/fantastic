@@ -1,6 +1,7 @@
 # 一 、TypeScript类型检测
     javascript是动态类型，在运行时进行检测；
     typescript是静态类型，编译阶段能确定变量类型，进行类型检查；只在编译时对类型进行静态检查。
+        微软开发，扩展js语法
 
     typescript和JavaScript一样，是弱类型，能隐式类型转换。 1+ '1' // '11'
 
@@ -8,6 +9,11 @@
 
 
 # 二、 test开发：
+    全局安装ts（已安装node）
+        npm install -g typescript
+        查看有没有
+            tsc -v
+
     vue-cli  4.x
     在已存在js项目安装typescript
         vue add @vue/typescript
@@ -363,6 +369,10 @@ class SecurityDoor extends Door implements Alarm {
 
 6. 泛型
 指在定义函数、接口或类的时候，不预先指定具体的类型，而在使用的时候再指定类型的一种特性。
+
+
+7. 声明合并
+如果定义了两个相同名字的函数、接口或类，那么它们会合并成一个类型
 
 
 新建文件夹-》npm init -y
