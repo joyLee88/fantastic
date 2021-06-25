@@ -5,6 +5,8 @@
         node -v
         window可装nvm
             nvm install stable 安装node最新稳定版
+        mac
+            npm i -g n
 ## 初始化，启动
         > 1. npm init @vitejs/app
             选定ts
