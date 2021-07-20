@@ -1,1 +1,612 @@
-类型检测
+# 一 、TypeScript类型检测
+    javascript是动态类型，在运行时进行检测；
+    typescript是静态类型，编译阶段能确定变量类型，进行类型检查；只在编译时对类型进行静态检查。
+            
+    微软开发，扩展js语法
+        ts支持任何js平台，但需要编译，js解析器不能直接执行。
+
+    typescript和JavaScript一样，是弱类型，能隐式类型转换。 1+ '1' // '11'
+            强类型语言：不允许改变变量的数据类型，除非强制类型转换
+
+    ts增加了：类型、ES新特性、es不具有的、丰富配置选项、强大开发工具
+    : 指定变量的类型。
+
+
+# 二、 test开发：
+    全局安装ts（已安装node）
+        npm install -g typescript
+        查看有没有
+            tsc -v
+
+    vue-cli  4.x
+    在已存在js项目安装typescript
+        vue add @vue/typescript
+            use class-style
+            use Babel alongside typescript
+    组件编写
+        ts编写有3种常用方式 Vue.extend()、@component、tsx
+    
+    @component
+
+# 三、 基础 （快速刷一遍）
+ts基础数据类型：
+    void、any、nerver、元祖、枚举、高级类型
+
+## 1. 原始数据类型
+    boolean、 number、string、undefined、null、symbol、bigInt
+
+1.1 :boolean
+let createdByNewBoolean: Boolean = new Boolean(1); //boolean 是 JavaScript 中的基本类型
+let createdByBoolean: boolean = Boolean(1); // Boolean 是 JavaScript 中的构造函数
+
+1.2 :number
+1.3 :string
+1.4 空值
+js没有空值void的概念，在ts中，用void表示没有任何返回值的函数。
+function alertName(): void {
+    alert('My name is Tom');
+}
+
+1.5 null和undefined
+与 void 的区别是，undefined 和 null 是所有类型的子类型。也就是说 undefined 类型的变量，可以赋值给 number 类型的变量
+
+// 这样不会报错
+let num: number = undefined;
+// 这样也不会报错
+let u: undefined;
+let num: number = u;
+
+## 2. 任意值
+任意值（Any）用来表示允许赋值为任意类型。
+
+如果是一个普通类型，在赋值过程中改变类型是不被允许的：
+    let myFavoriteNumber: string = 'seven';
+    myFavoriteNumber = 7;
+    // index.ts(2,1): error TS2322: Type 'number' is not assignable to type 'string'.
+
+任意值可以再赋值任意类型，并可以访问其任意属性或任何方法；对它的任意操作，返回的内容类型都是任意值。
+
+变量如果在声明的时候，未指定其类型，那么它会被识别为任意值类型！
+    let something; // 注意，是声明
+
+## 3. 类型推论
+mean: 如果没有明确的指定类型，那么 TypeScript 会依照类型推论（Type Inference）的规则推断出一个类型。
+
+如，第一行虽然未指定类型，但是赋值是字符串，推论为字符串类型。
+let myFavoriteNumber = 'seven';
+myFavoriteNumber = 7;
+
+// index.ts(2,1): error TS2322: Type 'number' is not assignable to type 'string'.
+
+## 4. 联合类型
+表示取值可以为多种类型中的一种；使用 | 分隔每个类型
+let myFavoriteNumber: string | number;
+myFavoriteNumber = 'seven';
+myFavoriteNumber = 7;
+
+联合类型的变量在被赋值的时候，会根据类型推论的规则推断出一个类型：
+let myFavoriteNumber: string | number;
+myFavoriteNumber = 'seven';
+console.log(myFavoriteNumber.length); // 5
+myFavoriteNumber = 7;
+console.log(myFavoriteNumber.length); // 编译时报错
+
+## 5.对象
+在面向对象语言中，接口（Interfaces）是一个很重要的概念，它是对行为的抽象，而具体如何行动需要由类（classes）去实现（implement）。
+5.1 接口一般首字母大写；
+5.2 赋值的时候，变量的形状必须和接口的形状保持一致，定义的变量比接口少了一些属性是不允许的，多一些属性也是不允许的；
+
+定义了一个接口 Person，接着定义了一个变量 tom，它的类型是 Person。这样，我们就约束了 tom 的形状必须和接口 Person 一致
+interface Person {
+    name: string;
+    age: number;
+}
+let tom: Person = {
+    name: 'Tom',
+    age: 25
+};
+
+5.3 不完全匹配一个形状，可以用可选属性
+interface Person {
+    name: string;
+    age?: number; // age可以不存在
+}
+
+5.4 任意属性
+使用 [propName: string] 定义了任意属性是字符串key，取 string 类型的值；一个接口只能定义一个任意属性；多个类型可以用联合
+
+一旦定义了任意属性，那么确定属性和可选属性的类型都必须是它的类型的子集：
+interface Person {
+    name: string;
+    age?: number;
+    [propName: string]: string;
+}
+可选属性 age 的值却是 number，number 不是 string 的子属性，所以报错
+
+5.5 只读属性
+有些字段只能在创建时赋值，使用readonly
+interface Person {
+    readonly id: number;
+}
+
+## 6.数组
+方式1：类型[] 表示类型数组；也可any
+let fibonacci: number[] = [1, 1, 2, 3, 5];
+
+方式2：Array<类型> 数组泛型
+let fibonacci: Array<number> = [1, 1, 2, 3, 5];
+
+方式3：interface NumberArray { // 用接口表示数组
+    [index: number]: number;
+}
+let fibonacci: NumberArray = [1, 1, 2, 3, 5];
+
+arguments类数组
+
+## 7.函数
+函数声明
+function sum(x: number, y: number): number {
+    return x + y;
+}
+    也可有可选参数，但可选参数后面不允许再出现必需参数了
+    添加了默认值的参数识别为可选参数，此时就不受「可选参数必须接在必需参数后面」的限制
+    使用...rest获取函数中的剩余参数
+    重载
+        重载允许一个函数接受不同数量或类型的参数时，作出不同的处理
+        function reverse(x: number): number;
+        function reverse(x: string): string;
+        function reverse(x: number | string): number | string | void {
+            if (typeof x === 'number') {
+                return Number(x.toString().split('').reverse().join(''));
+            } else if (typeof x === 'string') {
+                return x.split('').reverse().join('');
+            }
+        }
+
+函数表达式
+let mySum : (a: number, b: number) => number; // 声明
+mySum = function (x: number, y: number): number {
+    return x + y;
+};
+
+
+用接口定义函数的形状
+interface SearchFunc {
+    (source: string, subString: string): boolean;
+}
+let mySearch: SearchFunc;
+mySearch = function(source: string, subString: string) {
+    return source.search(subString) !== -1;
+}
+
+## 8.类型断言
+手动指定一个值的类型
+    值 as 类型 或 <类型>值
+
+将一个联合类型断言为其中一个类型
+将一个父类断言为更加具体的子类
+将任何一个类型断言为any
+将any断言为一个具体的类型
+    任何类型可以断言为any
+    any可以被断言为任何类型
+
+但是！并不是任何一个类型都可以断言为任何另一个类型！
+
+双重断言
+    as any as Foo
+
+## 9.声明文件
+要使用第三方库，需要引用声明文件。
+
+declare var 定义
+
+把声明语句放到一个单独文件，这就是声明文件，如jQuery.d.ts
+    声明文件必需以 .d.ts 为后缀。
+    declare var jQuery: (selector: string) => any;
+保证解析
+    检查下 tsconfig.json 中的 files、include 和 exclude 配置，确保其包含了 jQuery.d.ts 文件
+
+可以直接使用统一管理的第三方库声明文件
+    npm install @types/jquery --save-dev
+    可搜索其他
+        https://www.typescriptlang.org/dt/search?search=
+
+## 10.内置对象
+ECMAScript 标准提供的内置对象有：
+    Boolean、Error、Date、RegExp 等
+DOM 和 BOM 提供的内置对象有：
+    Document、HTMLElement、Event、NodeList 等
+
+    let body: HTMLElement = document.body;
+    let allDiv: NodeList = document.querySelectorAll('div');
+    document.addEventListener('click', function(e: MouseEvent) {
+    // Do something
+    });
+Node.js 不是内置对象的一部分，如果想用 TypeScript 写 Node.js，则需要引入第三方声明文件：
+    npm install @types/node --save-dev
+
+
+# 四、 进阶
+1. 类型别名
+为了给一个类型起个新名字，常用于联合类型。
+    用type创建
+
+2. 字符串字面量类型
+字符串字面量类型用来约束取值只能是某几个字符串中的一个。
+type EventNames = 'click' | 'scroll' | 'mousemove';
+    使用 type 定了一个字符串字面量类型 EventNames，它只能取三种字符串中的一种
+* 类型别名与字符串字面量类型都是使用 type 进行定义。
+
+3. 元组
+    ————  固定长度的数组
+        [类型，类型，类型] 长度为3
+数组合并了相同类型的对象，而元组（Tuple）合并了不同类型的对象。
+定义一对值分别为 string 和 number 的元组：
+    let tom: [string, number] = ['Tom', 25];
+
+越界的元素，会被限制为元组中每个类型的联合类型
+
+4. 枚举
+用于取值被限定在一定范围内的场景，使用 enum 关键字来定义
+    enum Days {Sun, Mon, Tue, Wed, Thu, Fri, Sat};
+枚举成员会被赋值为从 0 开始递增的数字，同时也会对枚举值到枚举名进行反向映射：
+    console.log(Days["Sun"] === 0); // true
+    console.log(Days[0] === "Sun"); // true
+可手动赋值
+    enum Days {Sun = 7, Mon = 1, Tue, Wed, Thu, Fri, Sat};
+
+枚举项有两种类型：常数项（constant member）和计算所得项（computed member）
+    enum Color {Red, Green, Blue = "blue".length};
+
+    常数枚举是使用 const enum 定义的枚举类型。
+    常数枚举与普通枚举的区别是，它会在编译阶段被删除，并且不能包含计算成员。
+
+外部枚举（Ambient Enums）是使用 declare enum 定义的枚举类型：
+    declare enum Directions {
+        Up,
+        Down,
+        Left,
+        Right
+    }
+
+    let directions = [Directions.Up, Directions.Down, Directions.Left, Directions.Right];
+    declare 定义的类型只会用于编译时的检查，编译结果中会被删除。外部枚举与声明语句一样，常出现在声明文件中。
+
+5. 类与接口
+定义了一件事物的抽象特点，包含它的属性和方法
+class Animal {
+  name: string; // 加上typescript类型
+  constructor(name: string) {
+    this.name = name;
+  }
+  sayHi(): string {
+    return `My name is ${this.name}`;
+  }
+}
+
+let a: Animal = new Animal('Jack');
+console.log(a.sayHi()); // My name is Jack
+
+(1) 面向对象（OOP）的三大特性：封装、继承、多态
+
+    封装（Encapsulation）：将对数据的操作细节隐藏起来，只暴露对外的接口。外界调用端不需要（也不可能）知道细节，就能通过对外提供的接口来访问该对象，同时也保证了外界无法任意更改对象内部的数据
+
+    继承（Inheritance）：子类继承父类，子类除了拥有父类的所有特性外，还有一些更具体的特性
+
+    多态（Polymorphism）：由继承而产生了相关的不同的类，对同一个方法可以有不同的响应。比如 Cat 和 Dog 都继承自 Animal，但是分别实现了自己的 eat 方法。此时针对某一个实例，我们无需了解它是 Cat 还是 Dog，就可以直接调用 eat 方法，程序会自动判断出来应该如何执行 eat
+
+(2) 存取器（getter & setter）：用以改变属性的读取和赋值行为
+class Animal {
+    name = 'Jack'; // ES7
+  constructor(name) {
+    this.name = name; // ES6
+  }
+  get name() {
+    return 'Jack';
+  }
+  set name(value) {
+    console.log('setter: ' + value);
+  }
+}
+
+let a = new Animal('Kitty'); // setter: Kitty
+a.name = 'Tom'; // setter: Tom
+console.log(a.name); // Jack
+
+(3) 修饰符（Modifiers）：修饰符是一些关键字，用于限定成员或类型的性质。比如 public 表示公有属性或方法;修饰符和readonly还可以使用在构造函数参数.
+    使用 static 修饰符修饰的方法称为静态方法
+
+    TypeScript 可以使用三种访问修饰符（Access Modifiers），分别是 public、private 和 protected。
+        public 修饰的属性或方法是公有的，可以在任何地方被访问到，默认所有的属性和方法都是 public 的
+        private 修饰的属性或方法是私有的，不能在声明它的类的外部访问,在子类中也是不允许访问
+            当构造函数修饰为 private 时，该类不允许被继承或者实例化
+        protected 修饰的属性或方法是受保护的，它和 private 类似，区别是它在子类中也是允许被访问的
+            当构造函数修饰为 protected 时，该类只允许被继承
+    
+    readonly
+        只读属性关键字，只允许出现在属性声明或索引签名或构造函数中
+        class Animal {
+            // public readonly name;
+            public constructor(public readonly name) {
+                // this.name = name;
+            }
+        }
+
+(4) 抽象类（Abstract Class）：抽象类是供其他类继承的基类，抽象类不允许被实例化。抽象类中的抽象方法必须在子类中被实现
+abstract 用于定义抽象类和其中的抽象方法。
+
+(5) 接口（Interfaces）：不同类之间公有的属性或方法，可以抽象成一个接口。接口可以被类实现（implements）。一个类只能继承自另一个类，但是可以实现多个接口
+
+实现（implements）是面向对象中的一个重要概念。把特性提取成接口（interfaces），用 implements 关键字来实现。这个特性大大提高了面向对象的灵活性。
+
+<!-- 多个接口 Alarm  Light -->
+interface Alarm {
+    alert(): void;
+}
+
+interface Light {
+    lightOn(): void;
+    lightOff(): void;
+}
+
+class Car implements Alarm, Light {
+    alert() {
+        console.log('Car alert');
+    }
+    lightOn() {
+        console.log('Car light on');
+    }
+    lightOff() {
+        console.log('Car light off');
+    }
+}
+class Door {
+}
+<!-- 多类实现同样的接口 -->
+class SecurityDoor extends Door implements Alarm {
+    alert() {
+        console.log('SecurityDoor alert');
+    }
+}
+
+*** 接口与接口之间可以是继承关系
+    <!-- LightableAlarm继承了Alarm的方法，还有自己的两个 -->
+    interface LightableAlarm extends Alarm {
+        lightOn(): void;
+        lightOff(): void;
+    }
+*** 接口继承类（其他语言不行）
+
+
+6. 泛型
+指在定义函数、接口或类的时候，不预先指定具体的类型，而在使用的时候再指定类型的一种特性。
+
+
+7. 声明合并
+如果定义了两个相同名字的函数、接口或类，那么它们会合并成一个类型
+
+
+新建文件夹-》npm init -y
+安装ts
+    npm add typescript -D
+npm中的ts-node-dev
+    实时修改ts，即修即得
+    修改package
+        "scripts": {
+            "dev": "ts-node-dev --respawn --transpile-only ./demos/demos1.ts"
+        }
+添加tsconfig.json
+    {
+        "compileOptions": {}
+    }
+
+
+————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+从零开始！！！
+---------------------------- 简单ts编译 --------------------------------------
+* node安装
+* > npm i -g typescript安装ts
+* > tsc 验证
+* 新建一个空目录，创建一个ts文件text.ts
+    console.log('hello ts');
+* > tsc text.ts
+    就生成一个text.js文件
+    > tsc text.ts -w 对当前文件自动监控生成
+
+* 若要编译所有ts文件：
+    1. 项目文件配置tsconfig.json文件
+        里面写{}就可以了
+
+        tsconfig.json是ts编译器的配置文件，ts编译器可以根据它的信息来进行编译
+        * "include" [  // 指定那些ts文件需要被编译
+            "./src/**/*"  // 创建一个src目录，** 表示任意目录，*表示任意文件
+        ],
+        "exclude": [ // 对某些文件进行编译排除，默认值有node_modules、bower_componets、jspm_packages，所以一般不用设置exclude就可以
+            "./src/helllo/**/*"
+        ],
+        "extends": "./configs/base", // 直接继承基础配置base文件，不用再写配置
+        "files": [text.ts, ....], // 直接将要编译的文件列出来，麻烦
+        * "compilerOptions": {  // 编译器的选项，配置复杂
+            "target": "ES3", // 指定ts编译的es版本，默认ES3版本，兼容性好；ESNext表示最新版本
+            "module": "es2015", // 指定要使用的模块化的规范，如none, commonjs,amd,umd.... esnext
+            // "lib": [], // 指定项目中要使用的库; 一般在浏览器不要写，写一个空数组，就会表示啥也不用。特殊在nodejs没有dom，需要写
+            "outDir": "./dist", // 一般会在ts同级目录生成js，这个选项可以指定编译后文件所在目录; 将源码和编译分开
+            "outFile": "./dist/app.js", // 将代码合并为一个文件；设置outFile后，所有全局作用域中的代码会合并到同一个文件（模块化的文件只有amd、system才能合并进去）
+
+            "allowJs": true, // 是否对src里面的js进行编译，生成放到dist里面
+            "checkJs": false, // 是否检查js代码符合语法规范；如allowJs为true的时候，js文件中的代码是否规范
+
+            "remvoeComments": false, //是否移除注释
+            "noEmit": true, // 不生成编译后的文件，即dist中不生成文件
+            "noEmitOnError": true, // 当编译报错，不生成dist文件
+
+            <!-- 语法 -->
+            "alway Strict": false, // 用来设置编译后的文件是否使用严格模式，默认false；模块文件默认是严格模式下的
+            "noImplicitAny: false, // 是否 不允许隐式的any，如形参不设置type就是隐型
+            "noImplicitThis": false, // 是否 不允许不明确类型的this；如 function fn(this: Window) { alert(this) } 
+            "strictNullChecks": true, // 严格检查空值； 如获取一个dom节点，判断dom节点存不存在
+            "strict": true, // 以上语法的总开关
+        }；
+
+    2. > tsc -w  此时监视所有ts文件
+----------------------------------------------------------------------------
+
+-----------------------------  手写小小ts项目 -------------------------------
+
+* webpack打包ts代码，新建一个项目空文件夹
+    > npm init 初始化一个项目，生成package.json
+    > cnpm i -D webpack webpack-cli typescript ts-loader 下载这些包，生成dev安全依赖包，包在node_modules
+    新建webpack.config.js配置文件
+        const path = require('path') // 引入一个包
+        module.exports = { // webpack中所有配置信息写在这里
+            entry: "./src/index.ts", // 指定入口文件
+            output: { // 指定打包文件所在目录
+                path: path.resolve(__dirname, 'dist'), // 指定打包文件的目录; 直接path:"./dist"也行；通过path能直接把路径拼出来
+                filename: "bundle.js", //将打包后的文件命名
+            },
+            module: { // 指定webpack打包时候使用模块
+                rules: [ // 指定加载的规则
+                    {
+                        test: /\.ts$/, // test指定规则生效的文件，匹配所以ts结尾的文件
+                        use: 'ts-loader', // 使用loader
+                        exclude: /node-modules/ // 排除文件
+                    }
+                ]
+            }
+        }
+    新建tsconfig.json
+        {
+            "include": [
+                "src/**/*"
+            ],
+            "compilerOptions": {
+                "module": "ES2015",
+                "target": "ES2015",
+                "strict": true
+            }
+        }
+    package.json，script命令添加，打包webpack
+        "build": "webpack"
+    > npm run build 即生成dist
+
+    自动生成html文件
+        > cnpm i -D html-webpack-plugin  nodemodules里已有，
+        webpack.config.js中配置该插件
+            const HTMLWebpackPlugin = require('html-webpack-plugin') // 引入html插件
+            module.exports = {
+                ....
+                plugins: [ // 配置webpack插件
+                    new HTMLWebpackPlugin({
+                        title: '自定义html标题'
+                    }),
+                ]
+            }
+        此时npm run build，dist里生成html文件，其中已引用了bundle.js
+
+        若是想自己做一个html模板，可以在src目录创建index.html，进行构造
+
+        注意配置模板链接
+            plugins: [ // 配置webpack插件
+                new HTMLWebpackPlugin({
+                    template: "./src/index.html"
+                }),
+            ]
+            从而就使用自定义html模板了
+    
+    自动构建，开发服务器
+        > cnpm i -D webpack-dev-server 安装内置服务器，运行该项目，自动刷新
+        package.json，script命令添加，开发启动命令
+            "start": "webpack serve --open chrome.exe" // 启动webpack服务器，并用谷歌打开网页
+
+        > npm start  启动
+
+    清空原dist生成，新生成dist （一般是新dist文件覆盖原文件），确保文件都是最新的
+        > cnpm i -D clean-webpack-plugin
+        webpack.config.js引入该插件
+            const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+            module.exports = {
+                ....
+                plugins: [ // 配置webpack插件
+                    new HTMLWebpackPlugin({
+                        template: "./src/index.html"
+                    }),
+                    new CleanWebpackPlugin()
+                ]
+            }
+    模块化
+        如新建src/m1.ts
+            export const h1 = '你好';
+        index.ts中引入
+            import { h1 } from './m1' 
+            console.log(h1); // 找不着m1，此时使用报错，因为不知道h1是模块化引入
+        webpack.config.js配置
+            module.exports = {
+                ....
+                resolve: { // 设置引用模块
+                    extensions: ['.ts', '.js'] // 凡是ts、js结尾的文件都可以作为模块化文件使用
+                }
+            }
+* 兼容性问题，对于不支持最新ES特性的浏览器等环境; 像promise等，仅仅通过tsconfig.js中的target转换是转不过去的
+    通过babel，就可以把新的转换成旧版也能使用
+
+    > cnpm i -D @babel/core @babel/preset-env babel-loader core-js
+        dev安装: babel核心、预置环境（各种浏览器等）、babel与webpack结合、模拟js运行环境（老版本环境能用新版本技术，如promise；corejs很大，一般按需加载）
+    
+    修改webpack.config.js配置
+        module的加载规则，要使用多loader
+            module.exports = {
+                ....
+                module: { // 指定webpack打包时候使用模块
+                    rules: [ // 指定加载的规则
+                        {
+                            test: /\.ts$/, // test指定规则生效的文件，匹配所以ts结尾的文件
+                            // use: 'ts-loader', // 使用loader
+                            use: [ // 加载顺序从后往前，先用tsloader将ts-》js，然后babel将新功能转成旧版环境适用
+                                { // 可以直接适用"babel-loader"，但是实际使用babel很复杂，需要配置
+                                    loader: "babel-loader",
+                                    options: {
+                                        // 设置预定义的环境，会在哪些浏览器中去运行
+                                        presets: [
+                                            [
+                                                // 指定环境的插件
+                                                "@babel/preset-env",
+                                                // 配置信息
+                                                {
+                                                    // 要兼容的目标浏览器
+                                                    targets: {
+                                                        "chrome": 58, // 谷歌得兼容到58版本
+                                                        "ie": "11"
+                                                    },
+                                                    // 指定corejs版本
+                                                    "corejs": "3", // package.json中显示为3.xx版本
+                                                    // 适用corejs的方式，“usage”表示按需加载
+                                                    "useBuiltIns": "usage"
+                                                }
+                                            ]
+                                        ]
+                                    }
+                                },
+                                'ts-loader'
+                            ],
+                            exclude: /node-modules/ // 排除文件
+                        }
+                    ]
+                }
+            }
+    
+    bundle.js中可以发现
+        (()=>{"use strict";console.log(5),console.log("你好")})();
+        最新webpack并没有为IE兼容，自动生成了箭头函数方式的自执行函数，此时在IE中打开就会报错
+
+        告诉webpack要兼容ie，修改webpack.config.js
+            ...
+            output: {
+                path:..,
+                filename: ...,
+                environment: {
+                    arrowFunction: false  // babel已经做到内部箭头函数转换了，webpack也别自动生成包一个啊
+                }
+            }
+        从而bundlejs变成
+            !function(){"use strict";console.log(5),console.log("你好")}();

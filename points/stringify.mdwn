@@ -1,0 +1,49 @@
+通常在存储对象、粗暴深克隆或是打印对象的时候，会使用JSON.stringify();
+
+* stringify 函数有第二个参数（可以说是过滤器）
+    是数组：能过滤出想要查找的属性
+        eg.
+        var o = {"id":"0001","type":"donut","name":"Cake","ppu":0.55,"batters":{"batter":[{"id":"1001","type":"Regular"}]};
+        console.log(JSON.stringify(o, ['name']))
+        // 打印出 {"name":"Cake"}
+
+    是函数：根据函数中写入的逻辑来计算每个键值对，若返回undefined，则不打印
+        console.log(JSON.stringify(o, (key, value) => {
+            if(typeof value === 'string') {
+                return undefined;
+            }
+            return value;
+        }))
+        // {"ppu":0.55,"batters":{"batter":[{},{},{},{}]},"topping":[{},{},{},{},{},{},{}]}
+    
+* 第三个参数：控制最后一个字符串的间距（可以说是格式化）
+    是数字：字符串化中的每个级别都将缩进这个数量的空格字符
+        JSON.stringify(user, null, 2);
+    是字符串：yoga这个代替空格字符
+
+
+* 内置toJSON()，自定义，如果可用，JSON.stringify 会自动调用它
+    将对象转换为字符串，并格式化为JSON数据格式。IE8及更早不支持。
+
+    对象中存在toJSON()方法且返回有效值，则调用toJSON()。否则返回对象本身
+        const user = {
+            firstName: "Prateek",
+            lastName: "Singh",
+            age: 26,
+            toJSON(){
+                return {
+                    fullName:`${this.firstName} + ${this.lastName}`
+                };
+            }
+        }
+
+        console.log(JSON.stringify(user));
+        // 结果
+
+        // "{ "fullName" : "Prateek Singh"}"
+
+so,
+    一个对象传入JSON.stringify()，对象序列化的内部顺序如下：
+        如果存在toJSON()方法且返回有效值，则调用toJSON()。否则返回对象本身。
+        如果提供第二个参数，则应用函数过滤器。
+        如果提供第三个参数，则进行格式化。

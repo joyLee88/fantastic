@@ -1,0 +1,24 @@
+微信小程序授权登录：
+    以前是通过getUserInfo接口 弹出授权弹窗。由于微信官方修改了 getUserInfo 接口，现在无法实现一进入微信小程序就弹出授权窗口，只能通过 button 去触发；
+    getUserInfo将不再弹出弹窗，并直接返回匿名的用户个人信息。
+
+    button组件，将 open-type 指定为 getUserInfo 类型，获取用户基本信息
+                使用 open-data 展示用户基本信息
+
+                bindgetuserinfo事件获取用户信息
+                
+            <button type="primary" open-type="getUserInfo" bindgetuserinfo="bindGetUserInfo">授权登录</button>
+    
+    判断是否已授权
+        wx.getSetting({
+            success: function(res) {
+                if (res.authSetting['scope.userInfo']) {
+                    // 授权
+
+                    // res.authSetting = {
+                    //   "scope.userInfo": true,
+                    //   "scope.userLocation": true
+                    // }
+                }
+            }
+        })
