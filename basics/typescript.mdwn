@@ -1,10 +1,14 @@
 # 一 、TypeScript类型检测
     javascript是动态类型，在运行时进行检测；
     typescript是静态类型，编译阶段能确定变量类型，进行类型检查；只在编译时对类型进行静态检查。
-        微软开发，扩展js语法
+            
+    微软开发，扩展js语法
+        ts支持任何js平台，但需要编译，js解析器不能直接执行。
 
     typescript和JavaScript一样，是弱类型，能隐式类型转换。 1+ '1' // '11'
+            强类型语言：不允许改变变量的数据类型，除非强制类型转换
 
+    ts增加了：类型、ES新特性、es不具有的、丰富配置选项、强大开发工具
     : 指定变量的类型。
 
 
@@ -25,6 +29,9 @@
     @component
 
 # 三、 基础 （快速刷一遍）
+ts基础数据类型：
+    void、any、nerver、元祖、枚举、高级类型
+
 ## 1. 原始数据类型
     boolean、 number、string、undefined、null、symbol、bigInt
 
@@ -106,7 +113,7 @@ interface Person {
 }
 
 5.4 任意属性
-使用 [propName: string] 定义了任意属性取 string 类型的值；一个接口只能定义一个任意属性；多个类型可以用联合
+使用 [propName: string] 定义了任意属性是字符串key，取 string 类型的值；一个接口只能定义一个任意属性；多个类型可以用联合
 
 一旦定义了任意属性，那么确定属性和可选属性的类型都必须是它的类型的子集：
 interface Person {
@@ -157,9 +164,11 @@ function sum(x: number, y: number): number {
         }
 
 函数表达式
-let mySum = function (x: number, y: number): number {
+let mySum : (a: number, b: number) => number; // 声明
+mySum = function (x: number, y: number): number {
     return x + y;
 };
+
 
 用接口定义函数的形状
 interface SearchFunc {
@@ -229,6 +238,8 @@ type EventNames = 'click' | 'scroll' | 'mousemove';
 * 类型别名与字符串字面量类型都是使用 type 进行定义。
 
 3. 元组
+    ————  固定长度的数组
+        [类型，类型，类型] 长度为3
 数组合并了相同类型的对象，而元组（Tuple）合并了不同类型的对象。
 定义一对值分别为 string 和 number 的元组：
     let tom: [string, number] = ['Tom', 25];
@@ -388,3 +399,214 @@ npm中的ts-node-dev
     {
         "compileOptions": {}
     }
+
+
+————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+从零开始！！！
+---------------------------- 简单ts编译 --------------------------------------
+* node安装
+* > npm i -g typescript安装ts
+* > tsc 验证
+* 新建一个空目录，创建一个ts文件text.ts
+    console.log('hello ts');
+* > tsc text.ts
+    就生成一个text.js文件
+    > tsc text.ts -w 对当前文件自动监控生成
+
+* 若要编译所有ts文件：
+    1. 项目文件配置tsconfig.json文件
+        里面写{}就可以了
+
+        tsconfig.json是ts编译器的配置文件，ts编译器可以根据它的信息来进行编译
+        * "include" [  // 指定那些ts文件需要被编译
+            "./src/**/*"  // 创建一个src目录，** 表示任意目录，*表示任意文件
+        ],
+        "exclude": [ // 对某些文件进行编译排除，默认值有node_modules、bower_componets、jspm_packages，所以一般不用设置exclude就可以
+            "./src/helllo/**/*"
+        ],
+        "extends": "./configs/base", // 直接继承基础配置base文件，不用再写配置
+        "files": [text.ts, ....], // 直接将要编译的文件列出来，麻烦
+        * "compilerOptions": {  // 编译器的选项，配置复杂
+            "target": "ES3", // 指定ts编译的es版本，默认ES3版本，兼容性好；ESNext表示最新版本
+            "module": "es2015", // 指定要使用的模块化的规范，如none, commonjs,amd,umd.... esnext
+            // "lib": [], // 指定项目中要使用的库; 一般在浏览器不要写，写一个空数组，就会表示啥也不用。特殊在nodejs没有dom，需要写
+            "outDir": "./dist", // 一般会在ts同级目录生成js，这个选项可以指定编译后文件所在目录; 将源码和编译分开
+            "outFile": "./dist/app.js", // 将代码合并为一个文件；设置outFile后，所有全局作用域中的代码会合并到同一个文件（模块化的文件只有amd、system才能合并进去）
+
+            "allowJs": true, // 是否对src里面的js进行编译，生成放到dist里面
+            "checkJs": false, // 是否检查js代码符合语法规范；如allowJs为true的时候，js文件中的代码是否规范
+
+            "remvoeComments": false, //是否移除注释
+            "noEmit": true, // 不生成编译后的文件，即dist中不生成文件
+            "noEmitOnError": true, // 当编译报错，不生成dist文件
+
+            <!-- 语法 -->
+            "alway Strict": false, // 用来设置编译后的文件是否使用严格模式，默认false；模块文件默认是严格模式下的
+            "noImplicitAny: false, // 是否 不允许隐式的any，如形参不设置type就是隐型
+            "noImplicitThis": false, // 是否 不允许不明确类型的this；如 function fn(this: Window) { alert(this) } 
+            "strictNullChecks": true, // 严格检查空值； 如获取一个dom节点，判断dom节点存不存在
+            "strict": true, // 以上语法的总开关
+        }；
+
+    2. > tsc -w  此时监视所有ts文件
+----------------------------------------------------------------------------
+
+-----------------------------  手写小小ts项目 -------------------------------
+
+* webpack打包ts代码，新建一个项目空文件夹
+    > npm init 初始化一个项目，生成package.json
+    > cnpm i -D webpack webpack-cli typescript ts-loader 下载这些包，生成dev安全依赖包，包在node_modules
+    新建webpack.config.js配置文件
+        const path = require('path') // 引入一个包
+        module.exports = { // webpack中所有配置信息写在这里
+            entry: "./src/index.ts", // 指定入口文件
+            output: { // 指定打包文件所在目录
+                path: path.resolve(__dirname, 'dist'), // 指定打包文件的目录; 直接path:"./dist"也行；通过path能直接把路径拼出来
+                filename: "bundle.js", //将打包后的文件命名
+            },
+            module: { // 指定webpack打包时候使用模块
+                rules: [ // 指定加载的规则
+                    {
+                        test: /\.ts$/, // test指定规则生效的文件，匹配所以ts结尾的文件
+                        use: 'ts-loader', // 使用loader
+                        exclude: /node-modules/ // 排除文件
+                    }
+                ]
+            }
+        }
+    新建tsconfig.json
+        {
+            "include": [
+                "src/**/*"
+            ],
+            "compilerOptions": {
+                "module": "ES2015",
+                "target": "ES2015",
+                "strict": true
+            }
+        }
+    package.json，script命令添加，打包webpack
+        "build": "webpack"
+    > npm run build 即生成dist
+
+    自动生成html文件
+        > cnpm i -D html-webpack-plugin  nodemodules里已有，
+        webpack.config.js中配置该插件
+            const HTMLWebpackPlugin = require('html-webpack-plugin') // 引入html插件
+            module.exports = {
+                ....
+                plugins: [ // 配置webpack插件
+                    new HTMLWebpackPlugin({
+                        title: '自定义html标题'
+                    }),
+                ]
+            }
+        此时npm run build，dist里生成html文件，其中已引用了bundle.js
+
+        若是想自己做一个html模板，可以在src目录创建index.html，进行构造
+
+        注意配置模板链接
+            plugins: [ // 配置webpack插件
+                new HTMLWebpackPlugin({
+                    template: "./src/index.html"
+                }),
+            ]
+            从而就使用自定义html模板了
+    
+    自动构建，开发服务器
+        > cnpm i -D webpack-dev-server 安装内置服务器，运行该项目，自动刷新
+        package.json，script命令添加，开发启动命令
+            "start": "webpack serve --open chrome.exe" // 启动webpack服务器，并用谷歌打开网页
+
+        > npm start  启动
+
+    清空原dist生成，新生成dist （一般是新dist文件覆盖原文件），确保文件都是最新的
+        > cnpm i -D clean-webpack-plugin
+        webpack.config.js引入该插件
+            const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+            module.exports = {
+                ....
+                plugins: [ // 配置webpack插件
+                    new HTMLWebpackPlugin({
+                        template: "./src/index.html"
+                    }),
+                    new CleanWebpackPlugin()
+                ]
+            }
+    模块化
+        如新建src/m1.ts
+            export const h1 = '你好';
+        index.ts中引入
+            import { h1 } from './m1' 
+            console.log(h1); // 找不着m1，此时使用报错，因为不知道h1是模块化引入
+        webpack.config.js配置
+            module.exports = {
+                ....
+                resolve: { // 设置引用模块
+                    extensions: ['.ts', '.js'] // 凡是ts、js结尾的文件都可以作为模块化文件使用
+                }
+            }
+* 兼容性问题，对于不支持最新ES特性的浏览器等环境; 像promise等，仅仅通过tsconfig.js中的target转换是转不过去的
+    通过babel，就可以把新的转换成旧版也能使用
+
+    > cnpm i -D @babel/core @babel/preset-env babel-loader core-js
+        dev安装: babel核心、预置环境（各种浏览器等）、babel与webpack结合、模拟js运行环境（老版本环境能用新版本技术，如promise；corejs很大，一般按需加载）
+    
+    修改webpack.config.js配置
+        module的加载规则，要使用多loader
+            module.exports = {
+                ....
+                module: { // 指定webpack打包时候使用模块
+                    rules: [ // 指定加载的规则
+                        {
+                            test: /\.ts$/, // test指定规则生效的文件，匹配所以ts结尾的文件
+                            // use: 'ts-loader', // 使用loader
+                            use: [ // 加载顺序从后往前，先用tsloader将ts-》js，然后babel将新功能转成旧版环境适用
+                                { // 可以直接适用"babel-loader"，但是实际使用babel很复杂，需要配置
+                                    loader: "babel-loader",
+                                    options: {
+                                        // 设置预定义的环境，会在哪些浏览器中去运行
+                                        presets: [
+                                            [
+                                                // 指定环境的插件
+                                                "@babel/preset-env",
+                                                // 配置信息
+                                                {
+                                                    // 要兼容的目标浏览器
+                                                    targets: {
+                                                        "chrome": 58, // 谷歌得兼容到58版本
+                                                        "ie": "11"
+                                                    },
+                                                    // 指定corejs版本
+                                                    "corejs": "3", // package.json中显示为3.xx版本
+                                                    // 适用corejs的方式，“usage”表示按需加载
+                                                    "useBuiltIns": "usage"
+                                                }
+                                            ]
+                                        ]
+                                    }
+                                },
+                                'ts-loader'
+                            ],
+                            exclude: /node-modules/ // 排除文件
+                        }
+                    ]
+                }
+            }
+    
+    bundle.js中可以发现
+        (()=>{"use strict";console.log(5),console.log("你好")})();
+        最新webpack并没有为IE兼容，自动生成了箭头函数方式的自执行函数，此时在IE中打开就会报错
+
+        告诉webpack要兼容ie，修改webpack.config.js
+            ...
+            output: {
+                path:..,
+                filename: ...,
+                environment: {
+                    arrowFunction: false  // babel已经做到内部箭头函数转换了，webpack也别自动生成包一个啊
+                }
+            }
+        从而bundlejs变成
+            !function(){"use strict";console.log(5),console.log("你好")}();

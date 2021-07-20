@@ -33,11 +33,103 @@ Obj.__proto__ = Person.prototype;
 Person.call(obj);
 Return obj;
 
-# 事件循环机制
+# 浏览器事件循环机制 event loop
 Js是单线程语言，本质是通过回调函数模拟异步操作。要实现非阻塞，通过事件循环机制。
-事件循环机制分三部分：主线程、宏任务队列、微任务队列
-执行主线程（遇到宏任务放宏任务、遇到微任务放微任务）——执行微任务——执行宏任务（创建并添加微任务）——执行微任务——UI render——下一轮
+	js任务分为：同步任务、异步任务。
+		异步任务：宏任务和微任务
 
+事件循环机制分三部分：主线程、宏任务队列、微任务队列
+	宏任务：整体代码、setTimeout、setInterval、I/O操作
+	微任务：new Promise().then（前提是promise中resolve执行了）、MutationObserver(前端回溯)、nextTick
+	为什么要区分宏微？
+		宏任务队列保证先进先出执行；但是某些任务优先级比较高，需要通过微任务来调节。
+
+	具体循环机制：
+		先执行主线程，执行同步任务即宏任务整体script（遇到宏任务放宏任务、遇到微任务放微任务）——执行微任务
+		开始一轮：宏任务（创建并添加微任务）——执行微任务——UI render——下一轮
+
+	node中的事件循环和浏览器中的事件循环有什么区别？
+		宏任务的执行顺序：
+			timers定时器：执行已安排的setTimeout和setInterval的回调函数
+			pending callback 待定回调：执行延迟到下一个循环迭代的I/O回调
+			idle，prepare：仅系统内部使用
+			poll：检索新的I/O事件，执行与I/O相关的回调
+			check：执行setImmediate()回调函数
+			close callback: socket.on('close', () => {})
+		微任务和宏任务在node的执行顺序
+			node v10以前：
+				执行完一个阶段中的所有任务
+				执行nextTick队列里的内容
+				执行完微任务队列的内容
+			node V10以后：
+				与浏览器的行为一致
+
+> eg1.
+	async function async1() {
+		console.log('async1 start');
+		await async2(); // == new promise(() => { async2() }) 宏任务同步代码
+		console.log('async1 end'); // == .then() 微任务 回调
+	}
+	async function async2() {
+		console.log('async2')
+	}
+	console.log('script start'); 宏任务同步代码
+	setTimeout(function(){
+		console.log('setTimeout')  下一轮宏任务异步代码
+	}, 0)
+	async1();  宏任务同步代码
+	new Promise(function(resolve) { 宏任务同步代码
+		console.log('promise1')
+		resolve();
+	}).then(function() {  resolve已执行，then放入微任务 回调
+		console.log('promise2')
+	})
+	console.log('script end') 宏任务同步代码
+
+	// 打印：先执行主线程和当前宏任务，添加宏任务和微任务队列，执行微任务，再执行下一轮宏任务
+	script start
+	async1 start
+	async2
+	promise1
+	script end
+	async1 end
+	promise2
+	setTimeout
+
+eg.2
+	console.log('start') //宏任务同步代码
+	setTimeout(() => { //宏任务异步代码 -》下一轮
+		console.log('children2');
+		Promise.resolve().then(() => { //微任务 回调异步 -> 下一轮？？？ 并没有，结合js解释性语言特性，这相当于同步代码，所以3在5前面！！！
+			console.log('children3')
+		})
+	}, 0)
+
+	new Promise(function(resolve, rej) {  //宏任务同步代码
+		console.log('children4')  //宏任务同步代码
+		setTimeout(function() { //宏任务异步代码 -》下一轮
+			console.log('children5');
+			resolve('children6')
+		}, 0)
+	}).then(res => { //resolve是在宏任务异步中，还没执行，所以then不能放当前微任务》下一轮
+		console.log('children7')
+		setTimeout(() => { //宏任务异步代码 -》下下轮
+			console.log(res)
+		}, 0)
+	})
+	// 打印
+	start
+	children4
+	<!--当前宏任务同步代码执行完成，查看微任务，没有，执行下一轮宏任务 -->
+	children2
+	children3
+	children5
+	children7
+	<!-- 下下轮宏任务 -->
+	children6
+	
+
+>
 # 事件机制
 事件源、事件、事件监听
 Js事件驱动的语言，如按钮点击等

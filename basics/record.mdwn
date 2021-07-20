@@ -1,0 +1,24 @@
+# vconsole
+https://github.com/Tencent/vConsole/blob/v3.3.0/doc/tutorial_CN.md
+通过变量控制vconsole显示
+    引入
+    <script src="./vconsole.js"></script>
+    <script>
+        var vConsole = new VConsole();
+    </script>
+    <style>
+        #__vconsole {
+            display: none;
+        }
+    </style>
+    // 打开或关闭调试的vconsole
+    versionClk() {
+        let debugOn = localStorage.getItem('debug');
+        if (debugOn !== '1') {
+        document.getElementById('__vconsole').style.display = 'block';
+        localStorage.setItem('debug', '1');
+        }else{
+        document.getElementById('__vconsole').style.display = 'none';
+        localStorage.setItem('debug', '0');
+        }
+    }
