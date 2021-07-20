@@ -23,3 +23,18 @@ function findComStr(str1, str2){
     }
 }
 findComStr('sjstrlll', 'sstre');
+
+
+function twoSum(arr, target){
+    const rArr = [];
+    for (let i = 0; i < arr.length; i++) {
+        if (arr[i] < target) {
+            rArr[0] = rArr.length === 0 && i;
+            if (arr[i] + arr[rArr[0]] === target) {
+                rArr[1] = i;
+            }
+        }
+
+    }
+    return rArr;
+}
