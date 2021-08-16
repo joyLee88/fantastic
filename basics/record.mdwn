@@ -22,3 +22,27 @@ https://github.com/Tencent/vConsole/blob/v3.3.0/doc/tutorial_CN.md
         localStorage.setItem('debug', '0');
         }
     }
+
+# vue使用axios post发送json数据跨域请求403
+注意：确保后台作了允许跨域的处理
+
+(1)设置全局post请求的Content-Type值为"text/plain"
+axio.defaults.headers.post['Content-Type'] = 'text/plain';
+
+(2)然后在发送请求的时候需要对JSON数据进行stringify转化
+this.$axios.post(this.url, JSON.strigify(parseData))
+
+# vhtml
+使用vhtml容易导致XSS攻击。
+解决：
+    用<pre>替换<div>，能识别转义字符,以及手动空格和换行
+
+    但是pre
+    可以导致段落断开的标签（例如标题、<p> 和 <address> 标签）绝不能包含在 <pre> 所定义的块里。尽管有些浏览器会把段落结束标签解释为简单地换行
+
+    pre标签使用的时候会出现不自动换行的问题，而且存在一些默认样式，解决自动换行:
+     white-space: pre-wrap; /* css-3 */
+            white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+            white-space: -pre-wrap; /* Opera 4-6 */
+            white-space: -o-pre-wrap; /* Opera 7 */
+            word-wrap: break-word; /* Internet Explorer 5.5+ */

@@ -127,6 +127,10 @@ git tag
 冲突
     冲突抓下来，手动解决冲突
     
+    ## git fetch && git pull
+    pull 可等于 fetch + merge 或 git rebase
+        形象点看本目录 图解.png
+        https://www.cnblogs.com/kevingrace/p/5896706.html
 
 ### 私有git管理
     .付费github

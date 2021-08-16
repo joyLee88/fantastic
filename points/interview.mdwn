@@ -1,8 +1,30 @@
+# w3c标准是什么
+W3C标准英文全程是World Wide Web Consortium，中文是万维网联盟。
+一系列标准的集合。网页主要有三部分组成：结构（Structure）、表现（Presentation）、行为（Behavior）
+
+web标准：将结构、表现、行为分离，使其更具有模块化。
+
+w3c标准：标签字母要小写，双标签要闭合，标签不允许随意嵌套。
+　　　　尽量使用外部样式和外链js，使结构、表现、行为分为三块，这样可以提高页面渲染速度。
+　　　　样式尽量少用行内样式，id和class名要做到见名知意。
+　　　　不需要变动页面内容，便可提供打印版本，不需要提供复制内容，提高网站易用性。
+
+# javascript
+核心（ECMAScript）
+	语法、数据结构、流程控制
+
+文档对象模型（DOM）
+	操作Dom的API
+
+浏览器对象模型（BOM）
+	对浏览器窗口进行访问和操作
+
 # Object.prototype.toString.call(null) // “[object null]” 判断最完整
 # typeof
-除了null的基本类型、object、function
-# instanceof X
-检测实例的原型是否该构造函数X的prototype
+基本类型(除了null)
+复合类型能判断object、function
+# o instanceof X
+检测实例o的原型是否该构造函数X的prototype
 function newInstanceOf(left, right) {
     let rightProto = right.prototype;
     let leftP = left.__proto__;
@@ -13,6 +35,13 @@ function newInstanceOf(left, right) {
     }
 }
 # Array.isArray()   isNaN()
+
+# 如何判断一个对象是否空对象
+(1) ES6的Object.keys()
+Object.keys(o).length == 0
+(2) Object.getOwnPropertyNames(o).length == 0
+(3) JSON.stringify(o) == "{}"
+(4) jquery的$.isEmptyObject(o)
 
 # this
 this 是执行上下文中的一个属性，它指向最后一次调用这个方法的对象。在实际开发中，this 的指向可以通过四种调用模式来判断。
@@ -49,18 +78,40 @@ Node的顶层对象是global，其他环境都不支持，且没有window和self
 对象之间通过__proto__连接起来的对象链， 当前对象找不到该属性，往上找，直到null。
 任何对象都具有隐式原型属性（__proto__），只有函数对象有显式原型属性（prototype）
 
-	* 原型：当我们使用new 关键字实例化一个类生成一个对象，这个对象内部有个指针指向构造函数的 prototype 属性对应的值，这个指针被称为原型。
+	* 原型：
+	原型就是具有公共属性和方法的对象。
+	原型的作用（1）数据共享，节省内存空间
+				其实就是为类(函数)提供了一个【公共区域】，在这个公共区域中声明的属性和方法能够被所有通过这个类所创建的对象所访问到。减少内存消耗。
+				（2）为了实现继承
+	
+	当我们使用new 关键字实例化一个类生成一个对象，这个对象内部有个指针指向构造函数的 prototype 属性对应的值，这个指针被称为原型。
 		每个对象都有原型，除了null和undefined
 	* 原型链：当我们访问一个对象的属性时，如果对象内部不存在这个属性，那么就会去它的原型对象上找这个属性，该原型对象又会有自己的原型，这种寻找的方式，看起来就像是链子一样，这便是原型链。
 
 对象obj原型的获取方法有：obj.__proto__ 、obj.constructor.prototype、Object.getPrototypeOf(obj)
 
+# 面向对象
+js的面向对象衍生方式  简单对象返回-》 构造函数  -》 prototype
+
 # 继承
 父类.call(this) // Parent.apply(this, arguments)
-子类prototype = Object.create(父类prototype);
-子类constructor指向自己
+子类.prototype = Object.create(父类.prototype);
+子类.constructor = 子类 (构造函数指向自己)
 
-Extends  super 类似call 执行父类构造函数
+extends指定继承的父类
+	Extends  super 类似call 执行父类构造函数
+
+js 在ES6前一般称为伪继承，主要有四种方式
+	原型链继承：无法向父类构造函数传参
+	构造函数继承：无法实现函数的复用
+	组合继承：使用原型继承继承父类的属性Parent.call(this)，使用构造函数继承父类的方法new Parent()。但子类调用了两次父类构造函数，生成了两个父类实例
+		function Son(age) {
+			Father.call(this, age)
+		}
+		​
+		Son.prototype = new Father()
+		let son = new Son(12)
+	寄生组合继承 （常用）
 
 # new 关键字
 新生一个对象——其__proto指向构造函数的原型——构造函数作用域赋给新对象，绑定this——为新对象添加属性，执行构造函数——返回对象
@@ -219,7 +270,7 @@ Js是单线程语言，本质是通过回调函数模拟异步操作。要实现
 		宏任务队列保证先进先出执行；但是某些任务优先级比较高，需要通过微任务来调节。
 
 	具体循环机制：
-		先执行主线程，执行同步任务即宏任务整体script（遇到宏任务放宏任务、遇到微任务放微任务）——执行微任务
+		先执行主线程，执行同步任务即宏任务整体script（遇到异步宏任务放宏任务、遇到微任务放微任务）——执行微任务
 		开始一轮：宏任务（创建并添加微任务）——执行微任务——UI render——下一轮
 
 	node中的事件循环和浏览器中的事件循环有什么区别？
@@ -519,6 +570,16 @@ this.$route：当前路由信息对象，即$router会被注入每个组件中�
 
 $router 是用来发送的， $route 是用来接收的
 
+### hash
+早期前端路由通过location.hash来实现，url中#后面的类容
+
+url中hash值：只是客户端的一种状态，向服务端发送请求时hash部分不会被发送。
+			hash值的改变，在浏览器的访问历史中增加一个记录，因此能回退、前进。
+			可用hashchange事件来监听hash值变化
+
+### vue Router 的路由模式 hash和history实现原理
+
+
 ## 7.vue 组件之间的传值通信
 组件传值可分为父子组件传值和兄弟组件传值
 	父组件给子组件传值：使用props
@@ -640,11 +701,39 @@ get： 读取，
 	回退没事
 post：提交
 	不能缓存，不能书签和历史记录
-	用body传输数据
+	用body传输数据 
 	只是较安全，不过通常用https，SSL协议
 	支持任意binary
 	不限制
 	回退会再次请求
+
+	*** post一般可以发送什么类型的文件
+
+	(1). 默认post数据类型 -- Content-Type: application/x-www-form-urlencoded
+	这个类型是我们使用ajax请求或者 curl 等工具的默认post数据类型。
+	除非设置'Content-Type:application/json'等方式声明类型。
+
+	浏览器的原生 form 表单，如果不设置 enctype 属性，那么最终就会以 application/x-www-form-urlencoded 方式提交数据
+	(2)Content-Type: application/json
+	这个类型一般用来发送json类型的数据。比如 {"title":"test","sub":[1,2,3]}
+
+	(3)Content-Type: multipart/form-data
+	此类型一般用来发送文件/图片
+	(4)Content-Type: text/xml
+	发送的data是xml格式
+
+	application/x-www-form-urlencoded VS multipart/form-data两者区别
+	文件内容的上传必须用multipart/form-data
+
+	简单的字符串key-value对(大部分form－data的情况)，用application/x-www-form-urlencoded更简单有效。用multipart就会添加一些不必要的额外字符串了。
+
+	*** post跨域
+	浏览器同源策略，限制javascript或cookie只能访问同域名下内容，做到安全限制。但有时候需要跨域操作：
+		JSONP - 利用script的get方式
+		CORS  -  数据量大，使用跨域资源共享 --- 移动终端上，除了opera Mini；PC上的现代浏览器都能友好的支持，除了IE9-
+			CORS 允许一个域上的网络应用向另一个域提交跨域 AJAX 请求。实现此功能非常简单，只需由服务器发送一个响应标头即可。
+				服务器端 header中设置Access-Control-Allow-Origin
+		隐藏iframe为跨域域名，请求数据，将得到的数据postMessage给当前窗口
 
 # 冒泡
 # 快排
