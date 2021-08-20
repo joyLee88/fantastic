@@ -1115,3 +1115,30 @@ body,h1,h2,h3,ul,li,input,div,span,a,form .... {
 }
 // 或者使用通配符*
 * {  margin: 0;  padding: 0;}
+
+
+(1)CSS中transition和animation的区别是什么？
+transition 是过渡，是样式值的变化的过程；animation 是动画也叫关键帧，通过和 keyframe 结合可以设置中间帧的状态；
+transition 需要通过用户或者js来配合触发，animation 配合 @keyframe 可以直接播放，不需用户触发；
+animation 可以设置更多的属性，比如循环次数，动画结束的状态等等；
+animation 可以结合 keyframe 设置每一帧的状态，但是 transition 只能设置开始和结束的状态；
+(2)防抖和节流有什么区别？如何实现？
+防抖是频繁触发的情况下，只有足够的空闲时间才执行代码一次。
+节流是指一定时间内js方法只执行一次。
+防抖需要一个延时器来辅助实现，延迟执行需要执行的代码，如果方法多次触发，把上次记录的延迟执行代码用clearTimeout清除，重新开始计时，如果计时完毕则执行代码。
+节流是声明一个变量当标志位，记录当前代码是否执行，如果正在执行，取消这次方法执行直接返回，如果空闲则正常触发方法执行。
+(3)如何实现深度优先遍历和广度优先遍历？
+深度优先遍历是从某个顶点出发，首先访问这个顶点，然后找出刚访问这个结点的第一个未被访问的邻结点，然后再以此邻结点为顶点，继续找它的下一个顶点进行访问。重复此步骤，直至所有结点都被访问完为止。
+广度优先遍历是从某个顶点出发，首先访问这个顶点，然后找出刚访问这个结点所有未被访问的邻结点，访问完后再访问这些结点中第一个邻结点的所有结点，重复此方法，直到所有结点都被访问完为止。
+(4)简述Vue父子组件加载渲染和子组件更新两种生命周期的执行顺序。
+父子组件加载渲染过程：
+父组件beforeCreate -> 父组件created -> 父组件beforeMount -> 子组件beforeCreate -> 子组件created -> 子组件beforeMount -> 子组件mounted -> 父组件mounted
+子组件更新过程
+父组件beforeUpdate -> 子组件beforeUpdate -> 子组件updated -> 父组件updated
+
+
+https://blog.csdn.net/melody_day/article/details/53510554
+
+https://www.cnblogs.com/jwen1994/p/10409811.html
+
+https://blog.csdn.net/imagine_tion/article/details/108951488

@@ -354,3 +354,5 @@
         },
         这行命令表示：只对 git 暂存区的 .vue、.js、.ts 文件执行 eslint --fix。
     再修改.husky/pre-commit hook 的触发命令为：npx lint-staged
+
+

@@ -1,0 +1,121 @@
+用于构建用户界面的js库，将数据渲染成HTML视图的开源库。
+facebook开发，开源
+    使用js直接操作DOM，浏览器会进行大量的重绘重排
+
+特点：
+    采用组件化模式、声明式编码
+    react native移动端开发
+    使用虚拟DOM+diffing算法，尽量减少与真实DOM的互动，最小化页面重绘
+
+# 简单点
+<body>
+    <!-- 来一个容器吧 -->
+    <div id="test"></div>
+    <!-- 引入react核心库 -->
+    <script type="text/javascript" src="./js/react.development.js"></script>
+    <!-- 引入react-dom，用于支持react操作DOM -->
+    <script type="text/javascript" src="./js/react-dom.development.js"></script>
+    <!-- 引入babel，用于将jsx转js -->
+    <script type="text/javascript" src="./js/babel.min.js"></script>
+    <!-- 此处写bable，jsx -->
+    <script type="text/babel">
+    // 创建虚拟DOM, jsx中标签和字符串可混写
+    const vDOM = <h1>说实话，真不想写hello</h1>
+    // 渲染虚拟DOM到页面
+    ReactDOM.render(vDOM, document.querySelector('#test'));
+    </script>
+</body>
+
+# 为啥不写js，写jsx
+虚拟dom架构繁琐，用js来做深度嵌套很麻烦，jsx能流畅直白做到
+    // 创建虚拟DOM
+    const vDom = React.createElement(标签名，标签属性，标签内容)
+    标签内容不能写html标签，所以，只能不停嵌套创建虚拟DOM
+
+# 虚拟DOM到底是个什么
+- typeof vDOM === object
+  是object类型对象，一般对象。
+
+- 真实DOM比虚拟DOM重很多，虚拟dom最终转化为真实dom
+
+# 一、 JSX
+javascript XML，react定义的类似于XML的js扩展语法；（XML：早期用于存储和传输数据，现在常用JSON）
+    本质：React.createElement(component, props, ...children)方法的语法糖
+简化创建虚拟DOM
+
+<style>
+    .title {
+        background-color: blueviolet;
+    }
+</style>
+<script type="text/babel">
+    // 创建虚拟DOM, jsx中标签和字符串可混写
+    // const vDOM = <h1>说实话，真不想写hello</h1>
+    const zId = 'myH1';
+    const zCon = '说实话，真不想写hello';
+    const vDOM = (
+        <h1 className = "title" id={zId}>
+            {zCon}
+            <span style={{color: 'orange', fontSize: '29px'}}>来来来</span>
+        </h1>
+    )
+    // 渲染虚拟DOM到页面
+    ReactDOM.render(vDOM, document.querySelector('#test'));
+</script>
+
+语法规则：
+    定义虚拟DOM，外围不用引用
+    html混入js表达式使用{}
+    样式类名用className
+    内联样式，用style={{key: value, ...}}
+    只有一个根标签
+    标签必须闭合，注意input、br等
+    标签首字母
+        若小写字母开头，转为html中同名元素，若无同名，报错；
+        若大写字母开头，React会去渲染对应的组件
+
+
+遍历加入
+<script type="text/babel">
+    const arr = ['aaa', 'bbb', 'ccc'];
+    const vDOM = (
+        <div>
+            <h1 className = "title" id={zId}>
+                {zCon}
+                <span style={{color: 'orange', fontSize: '29px'}}>来来来</span>
+            </h1>
+            <ul>
+                {
+                    arr.map((item, index) => {
+                        return <li key={index}>{item}</li>
+                    })
+                }
+            </ul>
+        </div>
+    )
+</script>
+# 二、 模块与组件
+模块：业务逻辑复杂，一般会一个特定功能一个js文件；——模块化
+组件：复用一个功能 —— 组件化
+
+准备开发者工具：
+    谷歌-扩展程序-安装react_dev_tools —— 在链接栏旁边的插件按钮里能找到，将其钉上将react_dev_tools固定在链接栏旁边
+        在F12里也多了两个属性
+
+React面向组件编程
+1. 创建函数式组件
+<script type="text/babel">
+    // 创建函数式组件
+    function Demo() {
+        console.log(this)  // undefined
+        return <h1 className = "title">
+                <span style={{color: 'orange', fontSize: '29px'}}>来来来</span>
+            </h1>
+    }
+    // 渲染组件到页面
+    ReactDOM.render(<Demo/>, document.querySelector('#test'))
+</script>
+在控制台components标签能看到该组件名字
+    其中打印this，为undefined，babel开启了严格模式，方法中的this不能指向window了
+
+2. 

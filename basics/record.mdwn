@@ -46,3 +46,52 @@ this.$axios.post(this.url, JSON.strigify(parseData))
             white-space: -pre-wrap; /* Opera 4-6 */
             white-space: -o-pre-wrap; /* Opera 7 */
             word-wrap: break-word; /* Internet Explorer 5.5+ */
+
+
+# vue页面加载之前，短暂闪屏现象
+在根DOM上
+<div class="app" style="display: none;" :style="{display: 'block'}">
+	{{message}}
+</div>
+
+在某块动态添加数据，出现闪烁 —— 使用v-cloak
+<ul v-cloak>
+  <li v-for="(item, index) in 10" :key="index">{{item}}</li>
+</ul>
+// 在填充数据之前隐藏
+[v-cloak] {
+    display: none;
+}
+
+# vue开发中，父组件添加scoped之后。解决在父组件中无法修改子组件样式问题
+
+# Vue Router的路由独享守卫
+
+# 新项目启动问题
+1. 脚手架创建新项目
+    vue create demo
+        package中启动是使用vue-cli-servce
+    创建vue.config.js
+2. 报错 this.getOptions is not a function
+node-sass版本过高
+   "node-sass": "^4.0.0",
+    "sass-loader": "^7.0.0"
+3. 引入新组件的时候，
+（1）该组件用到的资源，如i18n
+    "vue-i18n": "^8.0.0"
+    加入langs文件夹及修改文件内容；
+    再main.js挂载
+        import i18n from './langs/i18n'
+        new Vue({
+            el: '#app',
+            i18n,
+            components: { App },
+            template: '<App/>'
+        })
+本项目中的i18n, 合并该组件中的资源
+    见./langs/
+（2）在vue.config.js代理中加入新组件用到的本地开发域名映射(vue-cli脚手架搭建的项目需要手动创建vue.config.js;pacakage.json,需要用vue-cli-service serve修改默认用 webpack-dev-server 启动就会用 wepback.config.js)
+
+# 组件开发
+index.js将需要的资源都注入
+开发的时候css基础样式初始化定好
