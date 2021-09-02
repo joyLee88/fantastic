@@ -72,8 +72,41 @@ this.$axios.post(this.url, JSON.strigify(parseData))
     vue create demo
         package中启动是使用vue-cli-servce
     创建vue.config.js
+
+    module.exports = {
+        publicPath: './',
+        outputDir: "dist",
+            devServer: {
+            // proxy: 'http://172.22.26.165/'
+            port: 8080,
+            open: true,
+                proxy: {
+                    '/image-tools': {
+                        target: 'http://172.22.26.165',
+                        // target: 'http://172.21.84.15',
+                        ws: false,
+                        changeOrigin: true
+                    }
+                }
+            },
+            configureWebpack: {
+                performance: {
+                    hints: 'warning',
+                    //入口起点的最大体积
+                    maxEntrypointSize: 50000000,
+                    //生成文件的最大体积
+                    maxAssetSize: 30000000,
+                    //只给出 js 文件的性能提示
+                    assetFilter: function(assetFilename) {
+                        return assetFilename.endsWith('.js');
+                    }
+                }
+
+            }
+        };
+    package里还是喜欢用npm start， 把serve改成start
 2. 报错 this.getOptions is not a function
-node-sass版本过高
+node-sass版本过高,dev依赖
    "node-sass": "^4.0.0",
     "sass-loader": "^7.0.0"
 3. 引入新组件的时候，
@@ -92,6 +125,476 @@ node-sass版本过高
     见./langs/
 （2）在vue.config.js代理中加入新组件用到的本地开发域名映射(vue-cli脚手架搭建的项目需要手动创建vue.config.js;pacakage.json,需要用vue-cli-service serve修改默认用 webpack-dev-server 启动就会用 wepback.config.js)
 
+4. router
+(1)
+npm install vue-router
+
+
+(2)新建router.js
+import Vue from 'vue';
+import Router from 'vue-router';
+import Home from '@/views/home/home.vue';
+
+Vue.use(Router);
+
+const appRoutes = [{
+  path: '/',
+  // redirect: { name: 'searching' },
+  name: 'reporting',
+  component: () => import('@/views/reporting/reporting.vue'),
+}, {
+  path: '/myreport',
+  name: 'userreport',
+  component: () => import('@/views/userreport/userreport.vue'),
+}, {
+  path: '/searching',
+  name: 'searching',
+  component: () => import('@/views/searching/searching.vue'),
+}, {
+  path: '/result',
+  name: 'reporting-search',
+  component: () => import('@/views/reporting/reporting-search.vue'),
+}, {
+  path: '/detail',
+  name: 'detail',
+  component: () => import('@/views/common/detail.vue'),
+}, {
+  path: '/details',
+  name: 'report-details',
+  component: () => import('@/views/report-do/report-details.vue'),
+}];
+
+const routes = [{
+  path: '',
+  component: Home,
+  children: appRoutes,
+}];
+
+export default new Router({ routes });
+
+(3)mainjs挂载
+import router from './router'
+
+new Vue({
+  store,
+  render: h => h(App),
+}).$mount('#app')
+
+(4)修改整个App.vue
+
+    <template>
+    <div id="app">
+    <router-view/>
+    </div>
+    </template>
+
+5. vuex
+(1)npm install vuex --save
+(2)store.js
+import Vue from 'vue';
+import Vuex from 'vuex';
+// import { getUser, getPerson } from '@/service';
+// import { deptTypes } from '@/utils/date-str';
+// import { userInfo } from 'os';
+Vue.use(Vuex);
+
+export default new Vuex.Store({
+  state: {
+    user: {}
+  },
+  getters: {
+    // userName(state) { return state.user.personName || ''; },
+    // userDeptType(state) {
+    //   if (!(state.user && state.user.personInfo)) {
+    //     return '0';
+    //   }
+    //   const deptId = state.user.personInfo.deptId || '';
+    //   // const types = {
+    //   //   1: ['Xxjadm'], // 总编室
+    //   //   // 编辑室
+    //   //   2: ['Xxjdom', 'Xxjind', 'Xxjcws', 'Xxjm1p', 'Xxjoxh', 'Xxjnmc', 'Xxjspr', 'Xxjfav'],
+    //   //   3: ['Xxjtec'] // 技术局
+    //   // }
+    //   // eslint-disable-next-line
+    //   for (const key in deptTypes) {
+    //     const arr = deptTypes[key];
+    //     if (arr.includes(deptId)) {
+    //       return key;
+    //     }
+    //   }
+    //   return '0';
+    // },
+    // personInfo(state) {
+    //   return state.user.personInfo || {};
+    // },
+  },
+  mutations: {
+    // setUser(state, { user }) {
+    //   state.user = user;
+    // }
+  },
+  actions: {
+    // async getUserInfo({ commit }) {
+    //   const userInfo = await getUser();
+    //   let user = Object.assign({}, userInfo);
+    //   if (user.personId) {
+    //     // const pInfo = await getPerson(user.personId);
+    //     const pInfo = await getPerson();
+    //     // 测试
+    //     // pInfo.deptId = 'Xxjadm';
+    //     user = Object.assign(user, {
+    //       personInfo: pInfo
+    //     });
+    //   }
+    //   commit('setUser', { user });
+    // }
+  },
+});
+
+（3）挂载
+import store from './store'
+
+new Vue({
+  router,
+  store,
+  render: h => h(App),
+}).$mount('#app')
+
+6. axio elementui
+import Vue from 'vue'
+import ElementUI from 'element-ui'
+import App from './App.vue'
+import router from './router'
+import store from './store'
+import http from '@/plugins/http'
+import '@/styles/common.scss'
+import 'element-ui/lib/theme-chalk/index.css'
+
+Vue.use(http);
+Vue.use(ElementUI);
+Vue.config.productionTip = false
+
+new Vue({
+  router,
+  store,
+  render: h => h(App),
+}).$mount('#app')
+
+7. sourcemap
+vue-cli在vue-config设置
+const debug = process.env.NODE_ENV !== 'production'
+module.exports = {
+  devServer: {
+    //开发环境下设置为编译好以后直接打开浏览器浏览
+    open: true
+  },
+  configureWebpack: config => {
+    //调试JS
+    if (debug) config.devtool = "source-map";
+  },
+  css: {
+    //查看CSS属于哪个css文件
+    sourceMap: true
+  }
+};
+8. 新建vue项目出现error Unexpected ‘debugger‘ statement no-debugger，开启调试模式
+在 eslintConfig 下的 rules 添加 “no-debugger”: “off”, “no-console”: “off”,
+
 # 组件开发
 index.js将需要的资源都注入
 开发的时候css基础样式初始化定好
+
+
+# 动态引入图片
+tabData: [{
+			name: 'xxx',
+			desc: '',
+			img: require('@/assets/imgs/index/ser0.png')
+		}, {
+			name: 'xxx',
+			desc: '',
+			img: require('@/assets/imgs/index/ser1.png')
+		}, {
+			name: 'xxx',
+			desc: '',
+			img: require('@/assets/imgs/index/ser2.png')
+		}, {
+			name: 'xxx',
+			desc: '',
+			img: require('@/assets/imgs/index/ser3.png')
+		}]
+
+
+# 手机号码输入框
+简单点：
+<input
+    type="text"
+    maxlength="11"
+    placeholder="输入您的手机号"
+    v-model="phone"
+    oninput="value=value.replace(/[^\d]/g,'')"  
+/>
+还得校验数字
+<input
+    type="text"
+    maxlength="11"
+    placeholder="输入您的手机号"
+    v-model="phone"
+    @input="handleCheck"
+  />
+（1）number输入框右侧有个上下箭头----------------------省略，本来打算用number做
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+    }
+    input[type=“number”]{
+      -moz-appearance: textfield;
+    }
+
+    placeholder!!!!!  样式修改
+    ::-webkit-input-placeholder{}    /* 使用webkit内核的浏览器 */
+    :-moz-placeholder{}                  /* Firefox版本4-18 */
+    ::-moz-placeholder{}                  /* Firefox版本19+ */
+    :-ms-input-placeholder{}           /* IE浏览器 */
+    注1：冒号前写对应的input或textarea元素等。
+    注2：placeholder属性是css3中新增加的属性，IE9和Opera12以下版本的CSS选择器均不支持占位文本。
+
+（2）防抖，防止多次调用监听
+  const debounce = (fn, delay = 200) => {
+      // 记录上一次的延时器
+      let timer = null;
+      return function() {
+        const that = this;
+        // 清除上一次延时器
+        clearTimeout(timer)
+        timer = setTimeout(function() {
+          fn.apply(that)
+        }, delay);
+      }
+  }
+
+（3）keyup监听输入
+  handleCheck() {
+			this.phone = this.phone.replace(/[^\d]/g,'')
+			const num = this.phone;
+			debounce(() => {
+				// 校验规则
+				let reg = /^1[3|4|5|7|8][0-9]{9}$/;    
+				if(reg.test(num)){
+					console.log('ok')
+				}else{
+					console.log("您输入的手机号码格式错误");
+				}
+			})()
+		}
+
+# 邮箱检验
+实例1、只允许英文字母、数字、下划线、英文句号、以及中划线组成
+  ^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$
+实例2、名称允许汉字、字母、数字，域名只允许英文域名
+    举例：杨元庆001Abc@lenovo.com.cn
+  ^[A-Za-z0-9\u4e00-\u9fa5]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$
+
+
+# component + v-bind:is 实现动态组件添加
+<Tab
+    v-for="(item, index) in tabData"
+    :key="'pro'+index"
+    :name="item.name"
+  >
+    <component :is="item.component"></component>
+  </Tab>
+
+data: () => ({
+    tabData: [{
+      name: '校对实例',
+      component: () => import("@/components/ToContact.vue")
+    }, {
+      name: '应用场景',
+      component: () => import("@/components/ToContact.vue")
+    }, {
+      name: '核心优势',
+      component: () => import("@/components/Advantage.vue")
+    }, {
+      name: '接入流程 ',
+      component: () => import("@/components/ToContact.vue")
+    }]
+  })
+
+
+# vue吸顶效果
+导航栏用fixed/absolute，滚动条会有一部分藏在导航栏下——》一个空块
+根据route获取path，显示对应导航项
+外层框滚动向下到一定距离，变成overflow:hidden；框里能滚动的内容盒子变成overflow: scroll
+  监听路由; 通过当前路由去找当前选项，这样刷新就不会显示不对
+  watch:{
+    $route(to,from){
+      console.log(from.path.substring(1));//从哪来
+      console.log(to.path.substring(1));//到哪去
+      this.nav = this.$route.name; //当前route
+    }
+  }
+
+this.$refs.dd
+<div ref="dd" class="page-head" :class="headerFixed?'isFixed':''"></div>
+ mounted() {
+    // 监听dom渲染完成
+    this.$nextTick(function(){
+      const oBody = document.body;
+      oBody.addEventListener('scroll', this.handleScroll);
+      // 这里fixedHeaderRoot是吸顶元素的ID
+      let header = document.querySelector(".page-head");
+      // 这里要得到top的距离和元素自身的高度
+      this.offsetTop = header.offsetTop;
+      this.offsetHeight = header.offsetHeight;
+      console.log("offsetTop:" + this.offsetTop + "," + this.offsetHeight);
+    });
+  },
+  methods: {
+    handleScroll() {
+      let scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop;
+      // 判断页面滚动的距离是否大于吸顶元素的位置
+      this.headerFixed = scrollTop > (this.offsetTop - this.offsetHeight * 2);
+    }
+  },
+  destroyed() {
+    window.removeEventListener('scroll', this.handleScroll)
+  },
+
+.isFixed{
+    position: fixed;
+    top: 0;
+    left: 0;
+  }
+
+# vuex
+在要用的地方引入
+import Vuex from 'vuex';
+computed: {
+    ...Vuex.mapGetters(['userName', 'userDeptType']),
+  },
+methods: {
+    ...Vuex.mapMutations(['setFixed']),
+    ...Vuex.mapActions(['getUserInfo'])
+}
+
+# fixed 块遮住body滚动条
+mounted() {
+    this.$nextTick(() => {
+      this.sw = this.$refs.product.clientWidth || document.body.clientWidth;
+    })
+  },
+获取到宽度，将fixed块宽度改成sw
+
+浮动块还不能监听到body滚动，所以在body里的page节点加上：
+<div class="page product" ref="product" @mousewheel="bodyWheel">
+bodyWheel(e) {
+      var agent = navigator.userAgent;
+      const ev = e || window.event;
+      let distance = 50;
+      if (/.*Firefox.*/.test(agent)) {
+        distance = ev.detail > 0 ? distance : -distance;
+      } else {
+        distance = ev.wheelDelta > 0 ? -distance : distance;
+      }
+      document.body.scrollTop += distance;
+    }
+
+# 可以滚动，但是看不到滚动条
+hack
+这适用于简单的CSS属性：
+
+.container {
+    -ms-overflow-style: none;  // IE 10+
+    scrollbar-width: none;  // Firefox}.container::-webkit-scrollbar { 
+    display: none;  // Safari and Chrome}
+更新：scrollbar-width为Firefox 添加了新属性。
+
+对于旧版本的Firefox，请使用： overflow: -moz-scrollbars-none;
+
+兼容js写法：
+  用js计算内容盒子的滚动条宽度，移出外部盒子去，使其看不到
+  滚动条宽度：
+  scrollbarWidth = odiv.offsetWidth - odiv.clientWidth;//相减
+
+# 判断浏览器滚动方向
+var agent = navigator.userAgent;
+        if (/.*Firefox.*/.test(agent)) {
+            document.addEventListener("DOMMouseScroll", function(e) {
+                e = e || window.event;
+                var detail = e.detail;
+                if (detail > 0) {
+                    console.log("鼠标向下滚动");
+                } else {
+                    console.warn("鼠标向上滚动");
+                }
+            });
+        } else {
+            document.onmousewheel = function(e) {
+                e = e || window.event;
+                var wheelDelta = e.wheelDelta;
+                if (wheelDelta > 0) {
+                    console.log("鼠标向上滚动");
+                } else {
+                    console.warn("鼠标向下滚动");
+                }
+            }
+        }
+
+# 将盒子定成100%高度
+vh是css3属性
+以前是js计算
+document.body.clientHeight
+
+# 子组件想要获取父组件节点问题
+父子组件加载渲染过程：
+父组件beforeCreate -> 父组件created -> 父组件beforeMount -> 子组件beforeCreate -> 子组件created -> 子组件beforeMount -> 子组件mounted -> 父组件mounted
+子组件更新过程
+父组件beforeUpdate -> 子组件beforeUpdate -> 子组件updated -> 父组件updated
+
+# router-view 跟平常父子组件传值一样
+
+# 资源引入方式
+<img
+    width="527"
+    height="375"
+    src="@/assets/imgs/index/banner1.png"
+  />
+
+data: () => ({
+		tabData: [{
+			name: '文本校对',
+			desc: '基于新华社海量优质权威的数据、政治术语词库，利用人工智能先进算法针对文章、稿件的智能化专业校对，有效提升内容输出质量。',
+			img: require('@/assets/imgs/index/ser0.png')
+		}]
+})
+
+background: url(~@/assets/imgs/index/bannerbg.png) no-repeat;
+
+data: () => ({
+    tabData: [{
+      name: '校对实例',
+      component: () => import("@/components/Example.vue")
+    }]
+  })
+
+# v-html
+< img onerror="alert(11212)"> 类似这样
+
+最好后台数据过滤，或是少用v-html
+
+# 上线前检测
+改icon；logo可到首页；导航可点击块和切换刷新没问题
+
+----------------------------------------css------------------------------------
+css偷懒
+
+CSS Grid Generator：  https://cssgrid-generator.netlify.app/
+CSS Layout：  https://csslayout.io/
+Flexbox Generator：https://loading.io/flexbox/
+行数列数快速布局：cssgr.id 
+https://grid.layoutit.com/
+
+
+# 不用flex，块要上下居中
+display: table-cell; vertical-align: middle;

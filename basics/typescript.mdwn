@@ -453,7 +453,7 @@ npm中的ts-node-dev
 ----------------------------------------------------------------------------
 
 -----------------------------  手写小小ts项目 (github->base)-------------------------------
-
+1. ts webpack
 * webpack打包ts代码，新建一个项目空文件夹
     > npm init 初始化一个项目，生成package.json
     > cnpm i -D webpack webpack-cli typescript ts-loader 下载这些包，生成dev安全依赖包，包在node_modules
@@ -606,11 +606,100 @@ npm中的ts-node-dev
                 path:..,
                 filename: ...,
                 environment: {
-                    arrowFunction: false  // babel已经做到内部箭头函数转换了，webpack也别自动生成包一个啊
+                    arrowFunction: false,  // babel已经做到内部箭头函数转换了，webpack也别自动生成包一个啊
+                    const: false // 同理，const也有这个问题
                 }
             }
         从而bundlejs变成
             !function(){"use strict";console.log(5),console.log("你好")}();
+
+* node_modules忽略
+    touch .gitignore 添加该文件
+
+    然后在该文件添加常用配置：
+        # dependencies
+        /node_modules
+        /.pnp
+        .pnp.js
+
+        # testing
+        /coverage
+
+        # production
+        /build
+
+        # misc
+        .DS_Store
+        .env.local
+        .env.development.local
+        .env.test.local
+        .env.production.local
+
+        npm-debug.log*
+        yarn-debug.log*
+        yarn-error.log*
+
+* webpack在开发者模式下会开启sourceMap，断点查询
+    mode: "development",
+    devtool: 'cheap-module-source-map',
+    SourceMap 可以将压缩代码，映射到未压缩代码;devtool说明是哪种映射配置
+
+2. css
+npm i -D less less-loader css-loader style-loader  // 也可以用sass
+
+安装完毕，webpack配置文件修改：
+    添加对css文件的处理规则
+    module: {
+        rules: [
+            ...
+            ,
+            // 设置less文件的处理
+            {
+                test: /\.less$/,
+                use: [ // 先less、再css，最好style，最终引入到项目中
+                    "style-loader",
+                    "css-loader",
+                    "less-loader"
+                ]
+            }
+        ]
+    }
+
+写一个less样式文件，如在index.ts中引入
+    import './style/index.less'
+可以看到打包的css代码默认是在bundle.js中
+
+css也有兼容性问题，也有新的语法，css3，所以安装js类似babel有关css处理
+    npm i -D postcss postcss-loader postcss-preset-env
+    less转为css，就得立刻要考虑兼容性，所以post写在less后面，而且要做配置处理
+    {
+        test: /\.less$/,
+        use: [ // 先less、再css，最好style，最终引入到项目中
+            "style-loader",
+            "css-loader",
+            // 引入postcss
+            {
+                loader: "postcss-loader",
+                options: {
+                    postcssOptions: {
+                        plugins: [
+                            [
+                                "postcss-preset-env", // 预置环境
+                                { // 设置浏览器
+                                    // 兼容浏览器最新两个版本
+                                    browsers: 'last 2 versions'
+                                }
+                            ]
+                        ]
+                    }
+                }
+            },
+            "less-loader"
+        ]
+    }
+
+如 display: flex 不同浏览器有不同前缀
+    用以上，打包出bundle.js的时候，就会自动加上所有前缀
 
 -----------------------------------end-----------------------------------------
 
@@ -645,6 +734,18 @@ class Person {
     }
 }
 export const person: Person = new Person();
+
+class Snake {
+    head: HTMLElement;
+    bodies: HTMLCollection;
+
+    constructor() {
+        // 断言为HTMLElement
+        this.head = document.querySelector('#snake > div') as HTMLElement;
+        // bodies是collection，querySelectorAll是nodelist，所以用其他; !判断是否有
+        this.bodies = document.getElementById('snake')?.getElementsByTagName('div')!;
+    }
+}
 
 3. 构造函数和this
 前面只能算单例，需要传入值，达到类的作用，创建多个对象 —— 使用构造函数 —— 在new对象创建时候调用
@@ -804,8 +905,10 @@ class MyClass<T> {
 
 ------------------------------  end -------------------------------------
 
------------------------------  贪吃蛇 -----------------------------------
+----------------------  贪吃蛇 ---------------------------------------------
+1. 
 
+2. 
 
 
 
