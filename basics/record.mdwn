@@ -181,12 +181,23 @@ new Vue({
 }).$mount('#app')
 
 (4)修改整个App.vue
-
-    <template>
-    <div id="app">
+  <template>
+  <div id="app">
     <router-view/>
-    </div>
-    </template>
+  </div>
+  </template>
+
+  <script>
+  import Vuex from 'vuex';
+
+  export default {
+    name: 'app',
+    mounted() { this.getUserInfo(); },
+    methods: {
+      ...Vuex.mapActions(['getUserInfo']),
+    },
+  };
+  </script>
 
 5. vuex
 (1)npm install vuex --save
@@ -251,6 +262,16 @@ export default new Vuex.Store({
   },
 });
 
+在要用的地方引入
+import Vuex from 'vuex';
+computed: {
+    ...Vuex.mapGetters(['userName', 'userDeptType']),
+  },
+methods: {
+    ...Vuex.mapMutations(['setFixed']),
+    ...Vuex.mapActions(['getUserInfo'])
+}
+
 （3）挂载
 import store from './store'
 
@@ -279,6 +300,50 @@ new Vue({
   store,
   render: h => h(App),
 }).$mount('#app')
+
+
+### router传参
+使用$router.push 拼接参数传参； 有两种，
+使用params---链接不显示
+this.$router.push({
+  path: '',
+  params: {
+    dd: dd
+  }
+})
+使用query---链接显示
+this.$router.push({
+  path: '',
+  query: {
+    dd: dd
+  }
+})
+
+const appRoutes = [{
+    path: '/',
+    name: 'index',
+    component: () => import('@/views/Index/Index.vue')
+}, {
+	path: '/login/:type',
+	name: 'login',
+	component: () => import('@/views/PageLogin.vue')
+}]
+
+<div class="btn-re">
+    <router-link to="/login/r">注册</router-link>
+</div>
+<div class="btn-lo">
+    <router-link to="/login/l">登录</router-link>
+</div>
+
+mouted() {
+this.type = this.$route.params.type
+}
+watch:{
+		$route(){
+          this.type = this.$route.params.type
+		}
+	},
 
 7. sourcemap
 vue-cli在vue-config设置
@@ -467,16 +532,6 @@ this.$refs.dd
     left: 0;
   }
 
-# vuex
-在要用的地方引入
-import Vuex from 'vuex';
-computed: {
-    ...Vuex.mapGetters(['userName', 'userDeptType']),
-  },
-methods: {
-    ...Vuex.mapMutations(['setFixed']),
-    ...Vuex.mapActions(['getUserInfo'])
-}
 
 # fixed 块遮住body滚动条
 mounted() {
@@ -581,7 +636,38 @@ data: () => ({
 # v-html
 < img onerror="alert(11212)"> 类似这样
 
-最好后台数据过滤，或是少用v-html
+最好后台数据过滤，或是少用v-html； 而且用户输入框使用了v-html绑定的值，慎用
+
+
+# 页面导航栏监听页面滚动位置，显示高亮
+document.body.addEventListener('scroll', that.handleScroll)
+handleChangeTab(index, code) {
+      this.curNav = index;
+      const oTab = document.getElementById('tab_' + code);
+      document.body.scrollTop = oTab.offsetTop - 448;
+    },
+handleScroll() {
+  let sctop = document.body.scrollTop;
+  const navs = this.typeList[this.curType].navs;
+  const h = 448 + 50;
+  if (sctop <= h) {
+    this.curNav = 0;
+    return;
+  }
+  for (let i = 0; i < navs.length; i++) {
+    const item = navs[i];
+    const obj = document.getElementById('tab_' + item.code);
+    console.log(item.code)
+    const objUp = obj.offsetTop - h;
+    const objBo = obj.offsetHeight + obj.offsetTop - h;
+    console.log(obj.offsetTop, obj.offsetHeight)
+    if (sctop < objBo && sctop >= objUp) {
+      this.curNav = i;
+      break;
+    }
+  }
+},
+
 
 # 上线前检测
 改icon；logo可到首页；导航可点击块和切换刷新没问题
