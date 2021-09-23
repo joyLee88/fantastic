@@ -63,6 +63,14 @@ this.$axios.post(this.url, JSON.strigify(parseData))
     display: none;
 }
 
+# 从后台得到的数据对象，想要添加一个属性
+这时候一般在获取的时候遍历添加进去，必须在被监听的对象之前添加进去
+const result = (res && res.result && res.result.content) || [];
+this.tbs = result.map(item => { // 我要监听的是this.tbs
+    item.accessKeyStatus = false;
+    return item
+})
+
 # vue开发中，父组件添加scoped之后。解决在父组件中无法修改子组件样式问题
 
 # Vue Router的路由独享守卫
@@ -199,6 +207,9 @@ new Vue({
   };
   </script>
 
+  地址切换
+  <router-link to="/login/r">注册</router-link>
+
 5. vuex
 (1)npm install vuex --save
 (2)store.js
@@ -303,22 +314,7 @@ new Vue({
 
 
 ### router传参
-使用$router.push 拼接参数传参； 有两种，
-使用params---链接不显示
-this.$router.push({
-  path: '',
-  params: {
-    dd: dd
-  }
-})
-使用query---链接显示
-this.$router.push({
-  path: '',
-  query: {
-    dd: dd
-  }
-})
-
+1.地址栏显示：
 const appRoutes = [{
     path: '/',
     name: 'index',
@@ -344,6 +340,43 @@ watch:{
           this.type = this.$route.params.type
 		}
 	},
+此时通过push，传path或path带params即可
+this.$router.push('/path/type')
+this.$router.push({
+  path: '',
+  params: {
+    type: type
+  }
+})
+
+还有query，类似于get
+
+2. 地址栏不显示
+此时用name, 类似于post
+this.$router.push({
+  name: '',
+  params: {
+    dd: dd
+  }
+})
+但这种方式，要注意刷新，修改初始化的获取方式为：
+mouted() {
+  this.type = 'l'
+}
+不是重新获取参数，或是提前存在了sessionStorage
+
+# vue跳到相同路由的时候，报错Avoided redundant navigation to current location: xxxx
+不影响正常跳转，只要在router/index.js或router.js里重写push方法
+const originalPush = Router.prototype.push;
+Router.prototype.push = function (location) {
+    return originalPush.call(this, location).catch(err => err)
+}
+若还报错，可能是vue-router版本旧，undefined不存在catch
+  npm 升级当前vue-router : npm update vue-router --save
+
+结果发现还是会不行，有的无法跳转？
+  同一个路由，只是param不同
+
 
 7. sourcemap
 vue-cli在vue-config设置
@@ -364,6 +397,7 @@ module.exports = {
 };
 8. 新建vue项目出现error Unexpected ‘debugger‘ statement no-debugger，开启调试模式
 在 eslintConfig 下的 rules 添加 “no-debugger”: “off”, “no-console”: “off”,
+
 
 # 组件开发
 index.js将需要的资源都注入
@@ -460,6 +494,53 @@ tabData: [{
     举例：杨元庆001Abc@lenovo.com.cn
   ^[A-Za-z0-9\u4e00-\u9fa5]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$
 
+# input file
+<div class="upload">
+  <div class="upload-btn">
+      <p><img src="@/assets/imgs/online/up.png" width="19" height="19" />上传本地视频</p>
+      <input
+          type="file"
+          accept=".flv,.mkv,.mp4,.avi,.wmv,.3gp,.ts,.mov"
+      />
+  </div>
+  <p>支持视频格式：flv、mkv、mp4、avi、wmv、3gp、ts、mov，大小限制&lt;100MB,视频时长&lt;3分钟</p>
+</div>
+> .upload {
+    width: 100%; height: 240px;
+    background: #eff1f2;
+    border: 2px dashed #d9d9d9;
+    border-radius: 15px;
+    > .upload-btn {
+        position: relative;
+        margin: 72px auto 0;
+        width: 271px; height: 54px;
+        border-radius: 4px; overflow: hidden;
+        cursor: pointer;
+        > p {
+            display: block;
+            background: #1B86FF;
+            text-align: center;
+            line-height: 54px;
+            color: #fff;
+            img {
+                vertical-align: text-bottom; padding-right: 10px;
+            }
+        }
+        > input {
+            position: absolute; right: 0; top: 0;
+            width: 500px; height: 100px;
+        }
+    }
+    > p {
+        text-align: center;
+        margin-top: 23px;
+        font-size: 14px;
+        font-weight: 400;
+        text-align: center;
+        color: #999999;
+        line-height: 19px;
+    }
+}
 
 # component + v-bind:is 实现动态组件添加
 <Tab
@@ -596,6 +677,22 @@ var agent = navigator.userAgent;
             }
         }
 
+# 高度
+网页可见区域宽： document.body.clientWidth
+网页可见区域高： document.body.clientHeight
+网页可见区域宽： document.body.offsetWidth (包括边线的宽)
+网页可见区域高： document.body.offsetHeight (包括边线的高)
+网页正文全文宽： document.body.scrollWidth
+网页正文全文高： document.body.scrollHeight
+网页被卷去的高： document.body.scrollTop
+网页被卷去的左： document.body.scrollLeft
+网页正文部分上： window.screenTop
+网页正文部分左： window.screenLeft
+屏幕分辨率的高： window.screen.height
+屏幕分辨率的宽： window.screen.width
+屏幕可用工作区高度： window.screen.availHeight
+屏幕可用工作区宽度： window.screen.availWidth
+
 # 将盒子定成100%高度
 vh是css3属性
 以前是js计算
@@ -668,9 +765,95 @@ handleScroll() {
   }
 },
 
+# 输入完成后，回车登录
+mounted(){
+    //绑定事件
+     window.addEventListener('keydown',this.keyDown);
+  }
+
+methods:{
+    keyDown(e){
+        //如果是回车则执行登录方法
+      if(e.keyCode == 13){
+        this.login();
+      }
+    }
+}
+
+destroyed(){
+        window.removeEventListener('keydown',this.keyDown,false);
+  }
+
+# 用户登录信息失效
+在axio层写一个拦截器，只要调用接口，返回403, 就跳转到登录页面（window.location.href)
+修改我的http.js
+    import axios from 'axios';
+    import store from '@/store';
+    import router from '@/router';
+
+    axios.interceptors.response.use(
+      ({ data, headers, config }) => { // data是后台返回的对象
+        // if (config.url.includes('selectAuthorityInfo')) {
+        if (config.url.includes('authorityInfo')) {
+          const intranet = headers['X-user-resource'] || headers['x-user-resource'];
+          localStorage.setItem('intranet', intranet);
+        }
+        return data;
+      },
+      err => {
+        if (err.response && err.response.status == 403) { // 监听http状态
+          store.state.user = {};
+          window.sessionStorage.removeItem('UJZ');
+          router.replace({
+            path: 'login/l',
+            query: {
+              redirect: router.currentRoute.fullPath
+            }
+          })
+        }
+        return Promise.reject(err)
+      },
+    );
+https://www.jianshu.com/p/a0c67f4e145e
+
+若是不仅仅在于调用接口，这时候应该是有个轮询，来随时查看登录状态
+
+
+# slot
+子组件里留一个,绑定数据obj
+  <slot name="a" :obj="obj"></slot>
+父组件使用插槽，但是想要子组件的数据传过来；父组件通过slot-scope就可以拿到子组件slot上绑定的值
+  <child>
+    <div slot="a" slot-scope="props">{{props.obj}}</div>
+  </child>
+
+  有个问题，父组件data有个对象Json{a: {'txt': xxx}, b: {'txt':xxx}....}
+  如果我想用父组件这个data，是获取不到的，会报Json[props.obj] undefined
+    <div slot="a" slot-scope="props">{{Json[props.obj].txt}}</div>
+  最终，还是父亲给child组件传入数据Json
+    <child slot-data="{objcode: Json}">
+      <div slot="a" slot-scope="props">{{props.config[props.obj].txt}}</div>
+    </child>
+    子组件加一个
+    <slot name="a" :obj="obj" :config="slotData && slotData[o.code]"></slot>
+
+
+# element
+dialog 会被蒙版遮住：
+  :modal-append-to-body="false" 或  :append-to-body="true"
 
 # 上线前检测
 改icon；logo可到首页；导航可点击块和切换刷新没问题
+
+
+# 部署文件及web端服务
+（1）打开xshell，账户密码登录，将前端文件部署;
+  xshell新建登录ip1,将文件部署
+（2）连接打开nginx服务，将文件关联过来
+	ssh xhdev@ip2
+	cd /usr/share/nginx/html/portal
+	scp -r jiaozhen xhdev@ip2:/home/xhdev/docker-data/jiaozhen-nginx/html
+
 
 ----------------------------------------css------------------------------------
 css偷懒
@@ -684,3 +867,21 @@ https://grid.layoutit.com/
 
 # 不用flex，块要上下居中
 display: table-cell; vertical-align: middle;
+
+# 字数多 省略号
+.ellipsis{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -o-text-overflow: ellipsis;
+}
+鼠标移上去显示全部
+.showEllipsis:hover
+{
+    cursor: pointer;
+    /*background: #000;*/
+    white-space: pre-wrap;
+    width:200px;
+    text-overflow:inherit;
+    overflow:visible;
+}
