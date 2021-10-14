@@ -120,6 +120,24 @@ Obj.__proto__ = Person.prototype;
 Person.call(obj);
 Return obj;
 
+# 浏览器内核
+主要分成两部分：渲染引擎(layout engineer或Rendering Engine)和JS引擎
+1. 渲染引擎：
+负责取得网页的内容（HTML、XML、图像等等）、整理讯息（例如加入CSS等），以及计算网页的显示方式，然后会输出至显示器或打印机。
+浏览器的内核的不同对于网页的语法解释会有不同，所以渲染的效果也不相同。
+所有网页浏览器、电子邮件客户端以及其它需要编辑、显示网络内容的应用程序都需要内核。
+
+2. js引擎
+解析和执行javascript来实现网页的动态效果
+
+--- 最开始渲染引擎和JS引擎并没有区分的很明确，后来JS引擎越来越独立，内核就倾向于只指渲染引擎
+
+3. 常用浏览器内核
+Trident内核：IE,MaxThon,TT,The World,360,搜狗浏览器等。[又称MSHTML]
+Gecko内核：Netscape6及以上版本，FF,MozillaSuite/SeaMonkey等
+Presto内核：Opera7及以上。[Opera内核原为：Presto，现为：Blink;]
+Webkit内核：Safari,Chrome等。[ Chrome的Blink（WebKit的分支）]
+
 # 浏览器渲染原理
 前提：当输入链接时候，通过网络3次握手，获取到网页文档数据
 
@@ -838,17 +856,29 @@ js 中是以 64 位双精度格式来存储数字的，只有 53 位的有效数
 		1.标记清除：函数中申明变量（进入环境）, 函数执行结束（离开环境），垃圾回收器会删除没有引用的变量。
 		2.引用计数：引用计数的策略是跟踪记录每个值被使用的次数。变量引用次数为0的空间会被清理。
 # 性能优化
-http缓存优化
+用性能评估工具：
+	PageSpeed
+	Yslow：雅虎发布，为firefox、chrome、opera、safari插件
+	F12的timeline/profile功能
+1. css优化
+	移除空css、避免嵌套过深、减少代码量；
+	合并多个css，减少请求
+	css sprites合并多图，通过background属性设置图片
+2. js优化
+	Dom优化
+		一次性加入dom
+		使用委托批量绑定
+		class，少用style操作样式减少重排reflow
+	节流防抖
+	图片懒加载、动态加载
+	闭包删除不必要局部变量
 
-页面加载及渲染过程优化
-	渲染流程
-	懒加载无限列表
-Dom优化
-	删除不必要的代码和注释包括空格，尽量最小化文件
-	利用GZIP压缩文件
-	结合HTTP缓存文件
-CSS优化
-	减少关键CSS元素数量
+3. 网络优化
+	公用文件http缓存优化
+	减少HTTP请求数量；
+	尽量用localstorage代替cookie
+	CDN托管静态文件
+	开启Gzip压缩
 
 总的：
 	最小化关键字节数，减少下载时间
@@ -881,7 +911,27 @@ cookie：4kb，与服务端通信，每次会携带在HTTP头中，Http请求发
 	默认是浏览器关闭失效，可以设置失效时间。
 	易用性不好，需要自己封装
 
-注意xss注入，不要存储敏感信息
+	注意xss注入，不要存储敏感信息
+
+对比：
+1. cookie
+数据生命周期	一般由服务器生成，可以设置过期时间
+数据存储大小	4K
+与服务端通信	每次都会携带在 header 中，对于请求性能影响
+
+value	如果用于保存用户登录态，应该将该值加密，不能使用明文的用户标识
+http-only	不用通过 JS访问 Cookie，减少 XSS攻击
+secure	只能在协议为 HTTPS 的请求中携带
+same-site	规定浏览器不能在跨域请求中携带 Cookie，减少 CSRF 攻击
+
+2. localStorage	sessionStorage
+数据生命周期	页面关闭就清理	除非被清理，否则一直存在
+数据存储大小	5M	5M
+与服务端通信	不参与	不参与
+3. indexDB
+数据生命周期	除非被清理，否则一直存在
+数据存储大小	无限
+与服务端通信	不参与
 
 # 盒子模型
 	width	padding	border	margin

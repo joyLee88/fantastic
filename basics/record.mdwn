@@ -1,3 +1,5 @@
+this doc for recording what I have done, unmade and continuously updated.
+
 # vconsole
 https://github.com/Tencent/vConsole/blob/v3.3.0/doc/tutorial_CN.md
 通过变量控制vconsole显示
@@ -818,6 +820,22 @@ https://www.jianshu.com/p/a0c67f4e145e
 
 若是不仅仅在于调用接口，这时候应该是有个轮询，来随时查看登录状态
 
+# delete请求
+和post不一一样，只有两个参数，post、put、patch有三个
+
+axios.delete(’/api’,{data:{userId:1}})
+
+通过设置config里的data来进行传参
+
+const formDel = (url, param, opt) => {
+	const fd = getFormData(param);
+	// eslint-disable-next-line
+	const h = opt.headers ? opt.headers : {}
+	opt.headers = Object.assign(h, { 'Content-Type': 'application/x-www-form-urlencoded' });
+	// eslint-disable-next-line
+	delete opt.useFormData;
+	return axios.delete(url, {data: fd}, opt);
+};
 
 # slot
 子组件里留一个,绑定数据obj
@@ -837,6 +855,25 @@ https://www.jianshu.com/p/a0c67f4e145e
     子组件加一个
     <slot name="a" :obj="obj" :config="slotData && slotData[o.code]"></slot>
 
+# create+watch === compute
+但是某些情况，prop监听的是一个对象；当下次传入的还是这个对象，computed对这个对象是没法监听到变化的，是有限制的；
+watch可以用其他值来判断是否更新这个对象，无论传入对象相同与否。
+
+# 报错：Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+根据上面的解释我们可以得出结论：在v-if为false时，如果我们后续的js操作了v-if控制的dom元素，将会因为该部分dom元素不存在而抛出上述异常。
+针对这个问题，我们可以用v-show来代替v-if，就可以解决这个问题。
+
+# 自定义的组件上不能绑定事件@
+
+# 上传文件的限制
+https://blog.csdn.net/qq_43784821/article/details/120246767?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_title~default-4.no_search_link&spm=1001.2101.3001.4242
+
+# 文件后缀名对应的filetype
+https://blog.csdn.net/zhuyu19911016520/article/details/88714289
+
+# input 文件上传后再次点击没有反应
+需要清空上次的选择
+this.$refs.uploadV.value = '';
 
 # element
 dialog 会被蒙版遮住：
@@ -867,6 +904,15 @@ https://grid.layoutit.com/
 
 # 不用flex，块要上下居中
 display: table-cell; vertical-align: middle;
+
+# 图片上下左右自适应
+.box {
+  width: 100px; height: 100px; display:table-cell; vertical-align: middle;
+  background:#000; text-align:center;
+}
+.box img {
+  max-width: 100%; max-height:100%; vertical-align:middle;
+}
 
 # 字数多 省略号
 .ellipsis{
