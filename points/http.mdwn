@@ -1,0 +1,119 @@
+1. HTTP 请求报文结构
+- 首行是**Request-Line**包括：**请求方法**，**请求URI**，**协议版本**，**CRLF**
+- 首行之后是若干行**请求头**，包括**general-header**，**request-header**或者**entity-header**，每个一行以CRLF结束
+- 请求头和消息实体之间有一个**CRLF分隔**
+- 根据实际请求需要可能包含一个**消息实体** 一个请求报文例子如下：
+    GET /Protocols/rfc2616/rfc2616-sec5.html HTTP/1.1
+    Host: www.w3.org
+    Connection: keep-alive
+    Cache-Control: max-age=0
+    Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+    User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.153 Safari/537.36
+    Referer: https://www.google.com.hk/
+    Accept-Encoding: gzip,deflate,sdch
+    Accept-Language: zh-CN,zh;q=0.8,en;q=0.6
+    Cookie: authorstyle=yes
+    If-None-Match: "2cc8-3e3073913b100"
+    If-Modified-Since: Wed, 01 Sep 2004 13:24:52 GMT
+
+    name=qiu&age=25
+
+2. HTTP 响应报文结构
+- 首行是状态行包括：HTTP版本，状态码，状态描述，后面跟一个CRLF
+- 首行之后是若干行响应头，包括：通用头部，响应头部，实体头部
+- 响应头部和响应实体之间用一个CRLF空行分隔
+- 最后是一个可能的消息实体 响应报文例子如下：
+    HTTP/1.1 200 OK
+    Date: Tue, 08 Jul 2014 05:28:43 GMT
+    Server: Apache/2
+    Last-Modified: Wed, 01 Sep 2004 13:24:52 GMT # 最后修改时间，用于协商缓存
+    ETag: "40d7-3e3073913b100" # 文件hash，用于协商缓存
+    Accept-Ranges: bytes
+    Content-Length: 16599
+    Cache-Control: max-age=21600 # 强缓存（浏览器端）最大过期时间
+    Expires: Tue, 08 Jul 2014 11:28:43 GMT # 强缓存（浏览器端）过期时间
+    P3P: policyref="http://www.w3.org/2001/05/P3P/p3p.xml"
+    Content-Type: text/html; charset=iso-8859-1
+
+    {"name": "qiu", "age": 25}
+
+
+
+# HTTP常用状态码及使用场景
+	1xx：表示目前是协议的中间状态，还需要后续请求
+	2xx：表示请求成功
+	3xx：表示重定向状态，需要重新请求
+	4xx：表示请求报文错误
+	5xx：服务器端错误
+
+常用状态码：
+	101 切换请求协议，从 HTTP 切换到 WebSocket
+	200 请求成功，有响应体
+	301 永久重定向：会缓存
+	302 临时重定向：不会缓存
+	304 协商缓存命中
+	403 服务器禁止访问
+	404 资源未找到
+	400 请求错误
+	500 服务器端错误
+	503 服务器繁忙
+
+302状态码
+302 表示临时重定向，这个资源只是暂时不能被访问了，但是之后过一段时间还是可以继续访问，一般是访问某个网站的资源需要权限时，会需要用户去登录，跳转到登录页面之后登录之后，还可以继续访问。
+301 类似，都会跳转到一个新的网站，但是 301 代表访问的地址的资源被永久移除了，以后都不应该访问这个地址，搜索引擎抓取的时候也会用新的地址替换这个老的。可以在返回的响应的 location 首部去获取到返回的地址。301 的场景如下：
+比如从 http://baidu.com，跳转到 https://baidu.com
+域名换了
+
+# HTTP常用请求方式，区别和用途
+http/1.1 规定如下请求方法：
+	GET：通用获取数据
+	HEAD：获取资源的元信息
+	POST：提交数据
+	PUT：修改数据
+	DELETE：删除数据
+	CONNECT：建立连接隧道，用于代理服务器
+	OPTIONS：列出可对资源实行的请求方法，常用于跨域
+	TRACE：追踪请求-响应的传输路径
+
+get： 读取，
+	可以对请求对数据做缓存、可书签、可保留历史记录。
+	用url传输数据
+	不安全，明文
+	编码只支持ASCII
+	因url长度限制，如chrome的url限制是2M， 都比IE大
+	回退没事
+post：提交
+	不能缓存，不能书签和历史记录
+	用body传输数据 
+	只是较安全，不过通常用https，SSL协议
+	支持任意binary
+	不限制
+	回退会再次请求
+
+	*** post一般可以发送什么类型的文件
+
+	(1). 默认post数据类型 -- Content-Type: application/x-www-form-urlencoded
+	这个类型是我们使用ajax请求或者 curl 等工具的默认post数据类型。
+	除非设置'Content-Type:application/json'等方式声明类型。
+
+	浏览器的原生 form 表单，如果不设置 enctype 属性，那么最终就会以 application/x-www-form-urlencoded 方式提交数据
+	(2)Content-Type: application/json
+	这个类型一般用来发送json类型的数据。比如 {"title":"test","sub":[1,2,3]}
+
+	(3)Content-Type: multipart/form-data
+	此类型一般用来发送文件/图片
+	(4)Content-Type: text/xml
+	发送的data是xml格式
+
+	application/x-www-form-urlencoded VS multipart/form-data两者区别
+	文件内容的上传必须用multipart/form-data
+
+	简单的字符串key-value对(大部分form－data的情况)，用application/x-www-form-urlencoded更简单有效。用multipart就会添加一些不必要的额外字符串了。
+
+	*** post跨域
+	浏览器同源策略，限制javascript或cookie只能访问同域名下内容，做到安全限制。但有时候需要跨域操作：
+		JSONP - 利用script的get方式
+		CORS  -  数据量大，使用跨域资源共享 --- 移动终端上，除了opera Mini；PC上的现代浏览器都能友好的支持，除了IE9-
+			CORS 允许一个域上的网络应用向另一个域提交跨域 AJAX 请求。实现此功能非常简单，只需由服务器发送一个响应标头即可。
+				服务器端 header中设置Access-Control-Allow-Origin
+		隐藏iframe为跨域域名，请求数据，将得到的数据postMessage给当前窗口

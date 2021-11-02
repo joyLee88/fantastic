@@ -119,305 +119,6 @@ Var obj = {};
 Obj.__proto__ = Person.prototype;
 Person.call(obj);
 Return obj;
-
-# 浏览器内核
-主要分成两部分：渲染引擎(layout engineer或Rendering Engine)和JS引擎
-1. 渲染引擎：
-负责取得网页的内容（HTML、XML、图像等等）、整理讯息（例如加入CSS等），以及计算网页的显示方式，然后会输出至显示器或打印机。
-浏览器的内核的不同对于网页的语法解释会有不同，所以渲染的效果也不相同。
-所有网页浏览器、电子邮件客户端以及其它需要编辑、显示网络内容的应用程序都需要内核。
-
-2. js引擎
-解析和执行javascript来实现网页的动态效果
-
---- 最开始渲染引擎和JS引擎并没有区分的很明确，后来JS引擎越来越独立，内核就倾向于只指渲染引擎
-
-3. 常用浏览器内核
-Trident内核：IE,MaxThon,TT,The World,360,搜狗浏览器等。[又称MSHTML]
-Gecko内核：Netscape6及以上版本，FF,MozillaSuite/SeaMonkey等
-Presto内核：Opera7及以上。[Opera内核原为：Presto，现为：Blink;]
-Webkit内核：Safari,Chrome等。[ Chrome的Blink（WebKit的分支）]
-
-# 浏览器渲染原理
-前提：当输入链接时候，通过网络3次握手，获取到网页文档数据
-
-渲染引擎在取得内容之后的基本流程：
-	-> 解析html以构建dom树和css树
-	-> DOM和CSSOM合并，构建render树 
-	-> 浏览器根据render树，布局render树，计算每个节点位置等
-	-> 通过显卡， 绘制render树到屏幕上
-
-# 浏览器重绘和回流
-1. 当render tree中的一部分(或全部)因为元素的规模尺寸，布局，隐藏等改变而需要重新构建。这就称为回流。每个页面至少需要一次回流，就是在页面第一次加载的时候。
-
-2. 当render tree中的一些元素需要更新属性，而这些属性只是影响元素的外观，风格，而不会影响布局的，比如background-color。则就叫称为重绘。
-
-注：回流必将引起重绘，而重绘不一定会引起回流。
-
-## 哪些情况引起重绘和回流
-不同的条件下发生重排的范围及程度会不同：
-	1.页面初始渲染
-	2.改变字体，改变元素尺寸（宽、高、内外边距、边框，改变元素位置等各种情况：
-             设置 style 属性的值 
-
-             激活 CSS 伪类，比如 :hover
-
-             操作 class 属性
-
-            css3的某些属性（https://csstriggers.com/  结合此链接查看哪些属性会触发重排、哪些属性会触发重绘以及哪些属性会触发合成；）
-
-		（注意：如果修改属性不影响布局则不会发生重排）
-
-	3.改变元素内容（文本或图片等或比如用户在input框中输入文字）
-
-	4.添加/删除可见DOM元素（注意：如果是删除本身就display:none的元素不会发生重排；visibility:hidden的元素显示或隐藏不影响重排）
-
-	5.fixed定位的元素,在拖动滚动条的时候会一直回流
-	6.调整窗口大小（Resizing the window）
-	7.计算 offsetWidth 和 offsetHeight 属性【注释2】
-		【注释2：flush队列】
-
-		浏览器是聪明的，当对以下属性进行操作的时候：
-
-		包括：offsetTop、offsetLeft、 offsetWidth、offsetHeight、scrollTop、scrollLeft、scrollWidth、scrollHeight、clientTop、clientLeft、clientWidth、clientHeight、getComputedStyle() (currentStyle in IE)。
-
-		浏览器不会马上操作它们，而是会先缓存在队列中，有一定时间顺序去执行这些操作，但是在这过程中我们需要去获取在该队列中的属性时，浏览器为取得正确的值就会触发重排。这样就使得浏览器的优化失效了。
-
-		所以，在多次使用这些值时应进行缓存。
-
-## 如何减少重绘和回流
-	* 1.修改html元素中对应的class名，利用class替换样式
-		< script type = "text/javascript" >
-			$(document).ready(function ()
-			{
-				var el = $('id');
-				//1
-				el.css('width', '200px');
-				el.css('height', '200px');
-				//2
-				el.css({
-					'width' : '200px;',
-					'height' : '200px;'
-				});
-				//3 
-				el.addClass('changeStyle');
-			});
-		</script >
-
-	2.csstext（利用cssText属性合并所有改变，然后一次性写入）
-		var s = document.body.style; 
-		s.padding = "2px"; // 回流+重绘
-		s.border = "1px solid red"; // 再一次 回流+重绘 
-		s.color = "blue"; // 再一次重绘
-		s.backgroundColor = "#ccc"; // 再一次 重绘 
-		s.fontSize = "14px"; // 再一次 回流+重绘 
-		// 添加node，再一次 回流+重绘
-		document.body.appendChild(document.createTextNode('abc!’));
-
-		----------------------------------------------------------------------------
-		// 不好的写法
-		var left = 1;
-		var top = 1;
-		el.style.left = left + "px";
-		el.style.top = top + "px";
-		// 比较好的写法 
-		el.className += " className1";
-		// 比较好的写法 
-		el.style.cssText += "; left: " + left + "px; top: " + top + "px;";
-
-	3.display:none（隐藏元素，应用修改，重新显示）
-		var list = document.getElementById("list");
-
-		list.style.display = 'none’;
-
-		appendDataToElement(list,data);
-
-		list.style.display = 'block';
-
-	4.cloneNode （将原始元素拷贝到一个脱离文档的节点中,修改副本,完成后再替换回去； ）
-		var old = document.getElementById("list");
-
-		var clone = old.cloneNode(true);
-
-		appendDataToElement(clone,data);
-
-		old.parentNode.replaceChild(clone,old);
-
-	* 5.document.createDocumentFragment()；（使用文档片段（document fragment）在当前DOM之外构建一个子树，再插回去）
-		var fragment = document.createDocumentFragment();
-		var list = document.getElementById("list");
-		for (var i = 0; i < 10; i++)
-		{
-			var _li = document.createElement("li");
-			_li.onmouseover = function ()
-			{
-				this.style.backgroundColor = "#22b909";
-				this.style.width = "120px";
-				this.style.height = "50px";
-			}
-			_li.onmouseout = function ()
-			{
-				this.style.backgroundColor = "";
-				this.style.width = "100px";
-				this.style.height = "40px";
-			}
-			fragment.appendChild(_li);
-		}
-		list.appendChild(fragment);
-
-	6.使用trsansform
-        CSS的最终表现分为以下四步：Recalculate Style -> Layout -> Paint Setup and Paint -> Composite Layers
-
-        按照中文的意思大致是 查找并计算样式 -> 排布 -> 绘制 -> 组合层。
-
-       由于transform是位于Composite Layers层，而width、left、margin等则是位于Layout层，在Layout层发生的改变必定导致Paint Setup and Paint -> Composite Layers，
-
-       所以相对而言使用transform实现的动画效果肯定比使用改变位置(margin-left等)这些更加流畅。
-
-# 浏览器事件循环机制 event loop
-javaScript 语言的执行环境是单线程的，一次只能执行一个任务，多任务需要排队等候，而且定时器、网页请求、等待鼠标点击等，这种模式可能会阻塞代码，导致代码执行效率低下。为了避免这个问题，出现了异步编程。一般是通过 callback 回调函数、事件发布/订阅、Promise 等来组织代码，本质都是通过回调函数来实现异步代码的存放与执行。只有一个主线程来处理所有的任务，非阻塞靠的就是 event loop（事件循环）。
-
-Js是单线程语言，本质是通过回调函数模拟异步操作。要实现非阻塞，通过事件循环机制。
-	js任务分为：同步任务、异步任务。同步任务依次进入执行栈，异步任务会放入消息队列。
-		异步任务：宏任务队列和微任务队列
-
-事件循环机制分三部分：主线程、宏任务队列、微任务队列
-	宏任务：整体代码、setTimeout、setInterval、I/O操作
-	微任务：new Promise().then（前提是promise中resolve执行了）、MutationObserver(前端回溯)、nextTick
-	为什么要区分宏微？
-		宏任务队列保证先进先出执行；但是某些任务优先级比较高，需要通过微任务来调节。
-
-	具体循环机制：
-		先执行主线程，执行同步任务即宏任务整体script（遇到异步宏任务放宏任务、遇到微任务放微任务）——执行微任务
-		开始一轮：宏任务（创建并添加微任务）——执行微任务——UI render——下一轮
-
-	node中的事件循环和浏览器中的事件循环有什么区别？
-		宏任务的执行顺序：
-			timers定时器：执行已安排的setTimeout和setInterval的回调函数
-			pending callback 待定回调：执行延迟到下一个循环迭代的I/O回调
-			idle，prepare：仅系统内部使用
-			poll：检索新的I/O事件，执行与I/O相关的回调
-			check：执行setImmediate()回调函数
-			close callback: socket.on('close', () => {})
-		微任务和宏任务在node的执行顺序
-			node v10以前：
-				执行完一个阶段中的所有任务
-				执行nextTick队列里的内容
-				执行完微任务队列的内容
-			node V10以后：
-				与浏览器的行为一致
-
-> eg1.
-	async function async1() {
-		console.log('async1 start');
-		await async2(); // == new promise(() => { async2() }) 宏任务同步代码
-		console.log('async1 end'); // == .then() 微任务 回调
-	}
-	async function async2() {
-		console.log('async2')
-	}
-	console.log('script start'); 宏任务同步代码
-	setTimeout(function(){
-		console.log('setTimeout')  下一轮宏任务异步代码
-	}, 0)
-	async1();  宏任务同步代码
-	new Promise(function(resolve) { 宏任务同步代码
-		console.log('promise1')
-		resolve();
-	}).then(function() {  resolve已执行，then放入微任务 回调
-		console.log('promise2')
-	})
-	console.log('script end') 宏任务同步代码
-
-	// 打印：先执行主线程和当前宏任务，添加宏任务和微任务队列，执行微任务，再执行下一轮宏任务
-	script start
-	async1 start
-	async2
-	promise1
-	script end
-	async1 end
-	promise2
-	setTimeout
-
-eg.2
-	console.log('start') //宏任务同步代码
-	setTimeout(() => { //宏任务异步代码 -》下一轮
-		console.log('children2');
-		Promise.resolve().then(() => { //微任务 回调异步 -> 下一轮？？？ 并没有，结合js解释性语言特性，这相当于同步代码，所以3在5前面！！！
-			console.log('children3')
-		})
-	}, 0)
-
-	new Promise(function(resolve, rej) {  //宏任务同步代码
-		console.log('children4')  //宏任务同步代码
-		setTimeout(function() { //宏任务异步代码 -》下一轮
-			console.log('children5');
-			resolve('children6')
-		}, 0)
-	}).then(res => { //resolve是在宏任务异步中，还没执行，promise状态未完成，所以then不能放当前微任务》下一轮
-		console.log('children7')
-		setTimeout(() => { //宏任务异步代码 -》下下轮
-			console.log(res)
-		}, 0)
-	})
-	// 打印
-	start
-	children4
-	<!--当前宏任务同步代码执行完成，查看微任务，没有，执行下一轮宏任务 -->
-	children2
-	children3
-	children5
-	children7
-	<!-- 下下轮宏任务 -->
-	children6
-	
-eg.3
-	const p = function() {
-		return new Promise((resolve, reject) => {
-			const p1 = new Promise((resolve, reject) => {
-				setTimeout(() => {
-					resolve(1)  // resolve(2) 已经将promise状态改变了，不会再执行该步了！！！
-				}, 0)
-				resolve(2)  // 微任务，可then
-			})
-			p1.then(res => {
-				console.log(res)
-			})
-			console.log(3) // 宏任务同步
-			resolve(4)
-		})
-	}
-	p.then(res => {
-		console.log(res)
-	})
-	console.log('end') // 宏任务同步
-
-	// 分析
-	p.then 相当于
-	new Promise((resolve, reject) => {
-		const p1 = new Promise((resolve, reject) => {
-			setTimeout(() => {
-				resolve(1)
-			}, 0)
-			resolve(2)
-		})
-		p1.then(res => {
-			console.log(res)
-		})
-		console.log(3) // 宏任务同步
-		resolve(4)
-	}).then(res => {
-		console.log(res)
-	})
-
-	// 打印
-	// 宏任务同步
-	3
-	end
-	// 此轮微任务
-	2
-	4
-
 	
 >
 # 事件机制
@@ -485,6 +186,38 @@ Module: 模块，在 Webpack 中任何文件都可以作为一个模块，会根
 Chunk: 代码块，可以根据配置，将所有模块代码合并成一个或多个代码块，以便按需加载，提高性能；
 Loader: 模块加载器，进行各种文件类型的加载与转换；
 Plugin: 拓展插件，可以通过 Webpack 相应的事件钩子，介入到打包过程中的任意环节，从而对代码按需修改；
+
+打包加速的方法：
+	devtool 的 sourceMap较为耗时
+	第三方依赖外链script引入：vue、ui组件、JQuery等
+	babel-loader开启缓存cache
+	Tree Shaking 摇树：基于ES6提供的模块系统对代码进行静态分析, 并在压缩阶段将代码中的死代码（dead code)移除，减少代码体积。
+
+打包体积优化思路：
+	webpack-bundle-analyzer插件可以可视化的查看webpack打包出来的各个文件体积大小，以便我们定位大文件，进行体积优化
+	提取第三方库或通过引用外部文件的方式引入第三方库
+	代码压缩插件UglifyJsPlugin
+	服务器启用gzip压缩
+	按需加载资源文件 require.ensure=
+	剥离css文件，单独打包
+	去除不必要插件，开发环境与生产环境用不同配置文件
+	SpritesmithPlugin雪碧图，将多个小图片打包成一张，用background-image，backgroud-pisition，width，height控制显示部分
+	url-loader 文件大小小于设置的尺寸变成base-64编码文本，大与尺寸由file-loader拷贝到目标目录
+
+常用插件简述
+	webpack-dev-server
+	clean-webpack-plugin：编译前清理输出目录
+	CopyWebpackPlugin：复制文件
+	HotModuleReplacementPlugin：热更新
+	ProvidePlugin：全局变量设置
+	DefinePlugin：定义全局常量
+	splitChunks（老版本用CommonsChunkPlugin）：提取公共模块，将符合引用次数的模块打包到一起
+	mini-css-extract-plugin（老版本用ExtractTextWebpackPlugin）：css单独打包
+	TerserPlugin（老版本用UglifyJsPlugin）：压缩代码
+	progress-bar-webpack-plugin：编译进度条
+	DllPlugin& DllReferencePlugin：提高打包效率，仅打包一次第三方模块
+	webpack-bundle-analyzer：可视化的查看webpack打包出来的各个文件体积大小
+	thread-loader,happypack：多进程编译，加快编译速度
 
 # MVVM
 MVC、MVP 和 MVVM 是三种常见的软件架构设计模式，主要通过分离关注点的方式来组织代码结构，优化我们的开发效率。
@@ -668,90 +401,7 @@ Bus，初始化全局事件总线：
 组件component install
 
 # Git
-# Js缓存
-强缓存： response头，cache-control（缓存开关）字段验证是否可用，请求头也可以模拟，勾选disable chche
-协商缓存：读取不到强缓存，发送请求，请求头带上If-Modified-Since和If-None-Match，服务器判断是否需要更新。
-	》 若资源更新，那么返回资源和 200 状态码
-	》 如果资源未更新，那么告诉浏览器直接使用缓存获取资源
 
-# HTTP常用状态码及使用场景
-	1xx：表示目前是协议的中间状态，还需要后续请求
-	2xx：表示请求成功
-	3xx：表示重定向状态，需要重新请求
-	4xx：表示请求报文错误
-	5xx：服务器端错误
-
-常用状态码：
-	101 切换请求协议，从 HTTP 切换到 WebSocket
-	200 请求成功，有响应体
-	301 永久重定向：会缓存
-	302 临时重定向：不会缓存
-	304 协商缓存命中
-	403 服务器禁止访问
-	404 资源未找到
-	400 请求错误
-	500 服务器端错误
-	503 服务器繁忙
-
-302状态码
-302 表示临时重定向，这个资源只是暂时不能被访问了，但是之后过一段时间还是可以继续访问，一般是访问某个网站的资源需要权限时，会需要用户去登录，跳转到登录页面之后登录之后，还可以继续访问。
-301 类似，都会跳转到一个新的网站，但是 301 代表访问的地址的资源被永久移除了，以后都不应该访问这个地址，搜索引擎抓取的时候也会用新的地址替换这个老的。可以在返回的响应的 location 首部去获取到返回的地址。301 的场景如下：
-比如从 http://baidu.com，跳转到 https://baidu.com
-域名换了
-
-# HTTP常用请求方式，区别和用途
-http/1.1 规定如下请求方法：
-	GET：通用获取数据
-	HEAD：获取资源的元信息
-	POST：提交数据
-	PUT：修改数据
-	DELETE：删除数据
-	CONNECT：建立连接隧道，用于代理服务器
-	OPTIONS：列出可对资源实行的请求方法，常用于跨域
-	TRACE：追踪请求-响应的传输路径
-
-get： 读取，
-	可以对请求对数据做缓存、可书签、可保留历史记录。
-	用url传输数据
-	不安全，明文
-	编码只支持ASCII
-	因url长度限制，如chrome的url限制是2M， 都比IE大
-	回退没事
-post：提交
-	不能缓存，不能书签和历史记录
-	用body传输数据 
-	只是较安全，不过通常用https，SSL协议
-	支持任意binary
-	不限制
-	回退会再次请求
-
-	*** post一般可以发送什么类型的文件
-
-	(1). 默认post数据类型 -- Content-Type: application/x-www-form-urlencoded
-	这个类型是我们使用ajax请求或者 curl 等工具的默认post数据类型。
-	除非设置'Content-Type:application/json'等方式声明类型。
-
-	浏览器的原生 form 表单，如果不设置 enctype 属性，那么最终就会以 application/x-www-form-urlencoded 方式提交数据
-	(2)Content-Type: application/json
-	这个类型一般用来发送json类型的数据。比如 {"title":"test","sub":[1,2,3]}
-
-	(3)Content-Type: multipart/form-data
-	此类型一般用来发送文件/图片
-	(4)Content-Type: text/xml
-	发送的data是xml格式
-
-	application/x-www-form-urlencoded VS multipart/form-data两者区别
-	文件内容的上传必须用multipart/form-data
-
-	简单的字符串key-value对(大部分form－data的情况)，用application/x-www-form-urlencoded更简单有效。用multipart就会添加一些不必要的额外字符串了。
-
-	*** post跨域
-	浏览器同源策略，限制javascript或cookie只能访问同域名下内容，做到安全限制。但有时候需要跨域操作：
-		JSONP - 利用script的get方式
-		CORS  -  数据量大，使用跨域资源共享 --- 移动终端上，除了opera Mini；PC上的现代浏览器都能友好的支持，除了IE9-
-			CORS 允许一个域上的网络应用向另一个域提交跨域 AJAX 请求。实现此功能非常简单，只需由服务器发送一个响应标头即可。
-				服务器端 header中设置Access-Control-Allow-Origin
-		隐藏iframe为跨域域名，请求数据，将得到的数据postMessage给当前窗口
 
 # 冒泡
 # 快排
@@ -896,43 +546,6 @@ js 中是以 64 位双精度格式来存储数字的，只有 53 位的有效数
 		服务端开启gzip压缩
 
 
-# cookie sessionStorage   localStorage 共通和区别
-webstorage: 本地存储，存储在客户端，存储字符串，一般5M，节省网络流量，不参与服务器通信
-	window.sessionStorage 当前会话有效，关闭页面即清除，不共享
-	window.localStorage  永久保存，除非清除，在所有同源窗口共享
-	可直接使用api
-		setItem (key, value) —— 保存数据，以键值对的方式储存信息。
-		getItem (key) —— 获取数据，将键值传入，即可获取到对应的value值。
-		removeItem (key) —— 删除单个数据，根据键值移除对应的信息。
-		clear () —— 删除所有的数据
-		key (index) —— 获取某个索引的key
-cookie：4kb，与服务端通信，每次会携带在HTTP头中，Http请求发送set-cookie HTTP头作为响应一部分，根据name=value存储，一般不超过20个。过多会带来性能问题。
-	在所有同源窗口共享
-	默认是浏览器关闭失效，可以设置失效时间。
-	易用性不好，需要自己封装
-
-	注意xss注入，不要存储敏感信息
-
-对比：
-1. cookie
-数据生命周期	一般由服务器生成，可以设置过期时间
-数据存储大小	4K
-与服务端通信	每次都会携带在 header 中，对于请求性能影响
-
-value	如果用于保存用户登录态，应该将该值加密，不能使用明文的用户标识
-http-only	不用通过 JS访问 Cookie，减少 XSS攻击
-secure	只能在协议为 HTTPS 的请求中携带
-same-site	规定浏览器不能在跨域请求中携带 Cookie，减少 CSRF 攻击
-
-2. localStorage	sessionStorage
-数据生命周期	页面关闭就清理	除非被清理，否则一直存在
-数据存储大小	5M	5M
-与服务端通信	不参与	不参与
-3. indexDB
-数据生命周期	除非被清理，否则一直存在
-数据存储大小	无限
-与服务端通信	不参与
-
 # 盒子模型
 	width	padding	border	margin
 
@@ -1045,8 +658,11 @@ ID选择器 0.1.0.0
 # BFC
 块级格式化上下文,是一个独立的渲染区域，只有Block-level box参与， 它规定了内部的Block-level Box如何布局，不影响外部区域。
 
+文档流其实分为普通流、定位流和浮动流和三种，普通流其实就是指BFC中的FC，也即格式化上下文。
 一个页面是由很多个 Box 组成的，不同类型的 Box， 会参与不同的 Formatting Context。
 	最常见的 Formatting context 有 Block fomatting context (简称BFC)和 Inline formatting context (简称IFC)。
+普通流：元素按照其在 HTML 中的先后位置从上到下、从左到右布局，在这个过程中，行内元素水平排列，直到当行被占满然后换行，块级元素则会被渲染为完整的一个新行
+
 
 BFC的布局规则
 	内部的Box会在垂直方向，一个接一个地放置。
@@ -1099,8 +715,8 @@ html5新特性：
 	新技术 (webworker, websocket)
 
 	移除了
-		basefont, big, center, font, s, strike, tt, u
-		frame, frameset, Noframes
+		纯表现的元素：basefont、big、center、font、 s、strike、tt、u
+		对可用性产生负面影响的元素：frame、frameset、noframes
 css3新特性：
 	圆角 (border-radius)
 	阴影 (box-shadow)
@@ -1114,6 +730,56 @@ css3新特性：
 	媒体查询 (@media)
 	多栏布局 (multi-columns 、 flexible box 与 grid layouts)
 	图片边框 (border-image)
+
+# css选择器优先级
+!important > inline > id > class > tag > * > inherit > default
+
+	!important：大于其他
+	行内：1000
+	id选择器：100
+	类，伪类和属性选择器，如.content：10
+	类型选择器和伪元素选择器：1
+	通配符、子选择器、相邻选择器：0
+	同级别的后写的优先级高。
+
+相同class样式，css中后写的优先级高，和html中的class名字前后无关
+
+# viewport
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+<!-- 
+    width    设置viewport宽度，为一个正整数，或字符串‘device-width’
+    device-width  设备宽度
+    height   设置viewport高度，一般设置了宽度，会自动解析出高度，可以不用设置
+    initial-scale    默认缩放比例（初始缩放比例），为一个数字，可以带小数
+    minimum-scale    允许用户最小缩放比例，为一个数字，可以带小数
+    maximum-scale    允许用户最大缩放比例，为一个数字，可以带小数
+    user-scalable    是否允许手动缩放
+-->
+怎样处理 移动端 1px 被 渲染成 2px问题？
+局部处理
+	meta标签中的 viewport属性 ，initial-scale 设置为 1
+	rem按照设计稿标准走，外加利用transfrome 的scale(0.5) 缩小一倍即可；
+全局处理
+	mate标签中的 viewport属性 ，initial-scale 设置为 0.5
+	rem 按照设计稿标准走即可
+
+# 移除inline-block间隙
+移除空格
+使用margin负值
+使用font-size:0
+letter-spacing
+word-spacing
+
+# （外）边距重叠
+布局垂直方向上两个元素的间距不等于margin的和，而是取较大的一个
+
+- 同级相邻元素
+现象：上方元素设置margin-bottom: 20px，下方元素设置margin-top: 10px，实际的间隔是20px 
+避免办法：同级元素不要同时设置，可都设置margin-bottom或margin-top的一个，或者设置padding
+
+- 父子元素
+现象：父元素设置margin-top: 20px，下方元素设置margin-top: 10px，实际的间隔是20px 
+避免办法：父元素有padding-top，或者border-top。或者触发BFC
 
 # css 实现一个三角形
 利用了元素边框连接处的等分原理
@@ -1158,6 +824,38 @@ css3新特性：
 .right {  float: left;  margin-left: -200px;  width: 200px;  height: 100px;}
 .wrapper {  float: left;  width: 100%;  height: 100px;  background: lightgreen;  // sass嵌套体现结构  .center {    margin-left: 100px;    margin-right: 200px;    height: 100px;  }}
 
+
+# flex
+弹性布局，Flex 布局将成为未来布局的首选方案。 兼容性：
+	Webkit 内核的浏览器，必须加上-webkit前缀。
+	ie9不支持
+
+用 Flex 布局的元素，称为 Flex 容器（flex container），简称"容器"。它的所有子元素自动成为容器成员，称为 Flex 项目（flex item），简称"项目"。
+
+主轴&交叉轴：堆叠的方向，默认主轴是水平方向，交叉轴是垂直方向。可通过flex-derection: column设置主轴为垂直方向。
+
+容器属性：
+	display: flex
+	flex-direction：主轴的方向（即项目的排列方向），row | row-reverse | column | column-reverse;
+	flex-wrap：是否换行，nowrap | wrap | wrap-reverse;
+	flex-flow：direction 和 wrap简写
+	justify-content：主轴对齐方式，flex-start | flex-end | center | space-between | space-around;
+	align-items：交叉轴对齐方式，flex-start | flex-end | center | baseline | stretch;
+	align-content: 多根轴线的对齐方式。如果项目只有一根轴线，该属性不起作用。flex-start | flex-end | center | space-between | space-around | stretch;
+
+项目的属性:
+	order：项目的排列顺序，数值越小，排列越靠前，默认为0。
+
+	flex-grow：放大比例，默认为0，指定元素分到的剩余空间的比例。
+
+	flex-shrink：缩小比例，默认为1，指定元素分到的缩减空间的比例。
+
+	flex-basis：分配多余空间之前，项目占据的主轴空间，默认值为auto
+
+	flex：grow, shrink 和 basis的简写，默认值为0 1 auto
+
+	align-self：单个项目不一样的对齐方式，默认值为auto，auto | flex-start | flex-end | center | baseline | stretch;
+
 # 如何解决不同浏览器的标签默认的margin值和padding值得不同？
 直接重置默认样式
 body,h1,h2,h3,ul,li,input,div,span,a,form .... {
@@ -1168,6 +866,18 @@ body,h1,h2,h3,ul,li,input,div,span,a,form .... {
 
 
 (1)CSS中transition和animation的区别是什么？
+transition的值是简写，扩展开依次是：
+	transition-property：过渡属性
+	transition-duration：过渡时间长度
+	transition-delay：延迟几秒执行
+	transition-timing-function
+	linear：匀速
+	ease-in：加速
+	ease-out：减速
+	cubic-bezier函数：自定义速度模式，最后那个cubic-bezier
+
+	transition: 1s height cubic-bezier(.83,.97,.05,1.44);
+
 transition 是过渡，是样式值的变化的过程；animation 是动画也叫关键帧，通过和 keyframe 结合可以设置中间帧的状态；
 transition 需要通过用户或者js来配合触发，animation 配合 @keyframe 可以直接播放，不需用户触发；
 animation 可以设置更多的属性，比如循环次数，动画结束的状态等等；

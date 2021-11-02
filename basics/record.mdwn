@@ -886,11 +886,26 @@ dialog 会被蒙版遮住：
 # 部署文件及web端服务
 （1）打开xshell，账户密码登录，将前端文件部署;
   xshell新建登录ip1,将文件部署
-（2）连接打开nginx服务，将文件关联过来
-	ssh xhdev@ip2
-	cd /usr/share/nginx/html/portal
-	scp -r jiaozhen xhdev@ip2:/home/xhdev/docker-data/jiaozhen-nginx/html
+（2）连接打开nginx web服务器，将文件关联过来
+	cd deploy/jiaozhen // 切换到IP1前端文件所在目录
+	scp -r * xhdev@xx.xx.xx.xx:/home/xhdev/docker-data/jiaozhen-nginx/html // 复制该目录下所有文件到web服务器html下
 
+# 打包提示entrypoint size limit警告
+entrypoint size limit: The following entrypoint(s) combined asset size excee，入口点大小超过了建议的限制244kb
+
+在webpack中配置
+performance: { hints: false }
+
+在vue.config.js配置：
+configureWebpack: config => {
+     if (debug) {
+         config.devtool = 'source-map';
+         config["performance"] = {
+             maxEntrypointSize: 50000000,
+             maxAssetSize: 30000000,
+         }
+     }
+}
 
 ----------------------------------------css------------------------------------
 css偷懒
