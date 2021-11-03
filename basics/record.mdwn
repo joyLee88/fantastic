@@ -425,6 +425,41 @@ tabData: [{
 			img: require('@/assets/imgs/index/ser3.png')
 		}]
 
+# 图片懒加载
+<img v-lazy="url">
+
+# base64位图片
+const files = e.target.files;
+const file = files[0];
+if (typeof FileReader === 'function') { // 转base64
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  const that = this;
+  reader.onload = event => {
+      let base64Val = event.target.result;
+      that.requestUpload(base64Val, (res1, res2) => {
+          that.loading = false;
+          if (res1 && res1.code == 0) {
+              that.faces = res1.result && (res1.result.objects || []);
+          }
+          if (res2 && res2.code == 0) {
+              that.flags = res2.result && (res2.result.objects || []);
+          }
+      })
+  }
+} else {
+  console.log('该浏览器不支持转base64功能')
+  this.loading = false;
+}
+
+# 全角 半角
+半角
+每个半角字符占用一字节空间(一字节有8位)，共256个编码空间。
+半角正则表达式：/[\x00-\xff]/g
+
+全角
+每个全角字符占用两字节空间。
+全角正则表达式：/[^\x00-\xff]/g
 
 # 手机号码输入框
 简单点：
