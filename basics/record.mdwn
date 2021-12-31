@@ -295,6 +295,9 @@ new Vue({
 }).$mount('#app')
 
 6. axio elementui
+npm install axios element-ui
+
+
 import Vue from 'vue'
 import ElementUI from 'element-ui'
 import App from './App.vue'
@@ -428,7 +431,7 @@ tabData: [{
 # 图片懒加载
 <img v-lazy="url">
 
-# base64位图片
+# input file上传图片转base64位图片
 const files = e.target.files;
 const file = files[0];
 if (typeof FileReader === 'function') { // 转base64
@@ -451,6 +454,37 @@ if (typeof FileReader === 'function') { // 转base64
   console.log('该浏览器不支持转base64功能')
   this.loading = false;
 }
+
+# 本地图片地址转base64位
+<script>
+  // 获取要装换的地址
+  var img = document.querySelector('img').src
+  // 图片地址转base64的方法
+  function getBase64Image(img) {
+    var canvas = document.createElement('canvas')
+    canvas.width = img.width
+    canvas.height = img.height
+    var ctx = canvas.getContext('2d')
+    ctx.drawImage(img, 0, 0, img.width, img.height)
+    var ext = img.src.substring(img.src.lastIndexOf('.') + 1).toLowerCase()
+    var dataURL = canvas.toDataURL('image/' + ext)
+    return dataURL
+  }
+
+  var image = new Image()
+  image.src = img
+  // console.log(image.src)
+  // 解决 canvas 将图片转为base64报错: Uncaught DOMException: Failed to execute 'toDataURL' on
+  //  'HTMLCanvasElement': Tainted canvases may not be exported
+  image.setAttribute('crossOrigin', 'anonymous')
+  image.onload = function () {
+    var base64 = getBase64Image(image)
+    console.log(base64)
+    let img = document.getElementById('img')
+    // base64可以直接当做图片的src去赋值
+    img.setAttribute('src', base64)
+  }
+</script>
 
 # 全角 半角
 半角
@@ -910,6 +944,58 @@ https://blog.csdn.net/zhuyu19911016520/article/details/88714289
 需要清空上次的选择
 this.$refs.uploadV.value = '';
 
+# post 下载文件
+文件小或是返回的是文件地址，用get方式下载，window.open或a链接下载
+export const downloadExports = async (id, type) => {
+  const url = `${path}/event/export?id=${id}&type=${type}`;
+  window.open(url, '_blank');
+};
+await downloadExports(this.eventId);
+
+当文件比较大或返回的是文件流，用post方式
+  定义请求：
+  export const wordDown = async (param, opt) => {
+    const url = `${path}/api/aicheck/text/download`;
+    // const opt = {
+    //   useFormData: true,
+    // }
+    // const res = await post(url, param, opt);
+    return await post(url, param, opt, {
+      isAll: true
+    });
+  };
+  使用：
+  async downFile(w) {
+      const data = await wordDown(
+          {
+              html: w
+          },
+          {
+              responseType: "blob"
+          }
+      );
+      this.download(data);
+      },
+  download(res) {
+    <!-- 后端需要设置如下：
+      Access-Control-Expose-Headers : 'Content-Disposition'
+      后台Content-Disposition，需要配合 application/octet- stream
+     -->
+    <!-- 此处要在http拦截器处，将header返回到res里，能够获取到 -->
+      const disposition =
+          res.headers["content-disposition"] ||
+          res.headers["Content-Disposition"]; // issues#67 xp下导出功能无响应
+      const fileName = disposition.match(/filename=(\S*?)(;|$)/)[1];
+      const downloadElement = document.createElement("a");
+      const href = window.URL.createObjectURL(res.data); // 创建下载的链接
+      downloadElement.href = href;
+      downloadElement.download = decodeURI(fileName); // 下载后文件名
+      document.body.appendChild(downloadElement);
+      downloadElement.click(); // 点击下载
+      document.body.removeChild(downloadElement); // 下载完成移除元素
+      window.URL.revokeObjectURL(href); // 释放掉blob对象
+  },
+
 # element
 dialog 会被蒙版遮住：
   :modal-append-to-body="false" 或  :append-to-body="true"
@@ -943,6 +1029,10 @@ configureWebpack: config => {
 }
 
 ----------------------------------------css------------------------------------
+通过Can I Use[4]来查找某个属性的浏览器兼容性
+CSS的规范，这个比较权威的就是W3C的CSS Working Group
+
+
 css偷懒
 
 CSS Grid Generator：  https://cssgrid-generator.netlify.app/

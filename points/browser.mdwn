@@ -1,3 +1,9 @@
+# 测试本机浏览器在 User-Agent 字符串中提供的主要浏览器版本
+https://is-chrome-100-yet.glitch.me/
+	从 Chrome 96 开始，直到 Chrome 99，Chrome 将提供一个试验性标志，来把 UA 中的浏览器版本强制改为 100
+	在 chrome://flags中发开 #force-major-version-to-100 来开启这个实验
+再访问 「https://is-chrome-100-yet.glitch.me/」 就可以发现 UA 中的主要版本号已经变成 100 啦
+
 # 一、浏览器内核
 主要分成两部分：渲染引擎(layout engineer或Rendering Engine)和JS引擎
 1. 渲染引擎：

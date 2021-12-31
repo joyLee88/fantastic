@@ -21,7 +21,7 @@ w3c标准：标签字母要小写，双标签要闭合，标签不允许随意�
 
 # Object.prototype.toString.call(null) // “[object null]” 判断最完整
 # typeof
-基本类型(除了null)
+基本类型number\string\boolean\bigint\symbol\undefined(除了null)
 复合类型能判断object、function
 # o instanceof X
 检测实例o的原型是否该构造函数X的prototype
