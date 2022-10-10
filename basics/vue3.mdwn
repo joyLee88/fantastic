@@ -356,3 +356,279 @@
     再修改.husky/pre-commit hook 的触发命令为：npx lint-staged
 
 
+# vite对文件的处理
+http://www.zyiz.net/tech/detail-141705.html
+
+https://zhuanlan.zhihu.com/p/423247347
+
+图片动态引入：
+const path = new URL(`../assets/blogPhotos/${name}.jpg`, import.meta.url); // 不能@
+import cover from '@/assets/bg.jpg?url'
+
+
+---------------  vue3 + ts 小demo  start-------------------------------
+1. 创建
+yarn create @vitejs/app xxx --template vue
+cd xxx
+yarn install
+
+可以看到“setup”语法糖：
+```js
+    // 以前
+    <script>
+        import { defineComponent } from "vue";
+        export default defineComponent({
+        name: "HelloWorld",
+        componets: {}
+        setup() {
+            // 代码开始
+        }
+        })
+    </script>
+    // 现在setup，在script里就是代码开始；
+    // import组件直接挂载了，不需要components
+    <script setup>
+        import { ref } from 'vue'
+
+        defineProps({
+        msg: String
+        })
+
+        const count = ref(0)
+    </script>
+
+```
+
+2. 安装扩展
+volar，防止冲突，要禁止vue2的vetur
+
+
+
+
+------------------------------  end ----------------------------------
+
+
+
+--------------------------------------start---------------------------------------
+----------------------------------------------------------------------------------
+------------------------------  vue3仔细阅读以下文档 -------------------------------
+
+read vue3 in english
+incrementally 渐进递增的 ：估计理解为  简单的核心使用 逐渐使用vuex等工具
+
+一、准备
+1. vue有关
+提供了几种方式使用vue，常用npm和cli，说到cdn这个可以提高前端性能吧
+1.1 vue devtools
+    专门用于vue的调试环境，安装谷歌的扩展程序
+        https://github.com/vuejs/devtools#vue-devtools
+        git clone之后
+            npm install
+            npm run build
+            发现不太好使，报内部有用yarn，无奈我下个yarn吧
+            npm install -g yarn
+            yarn --version
+            yarn run build
+            .......成功
+        我当前这个版本，在devtools\packages\shell-chrome\manifest.json
+            把文件中 persistent 这个属性的值改成true
+
+        浏览器-扩展程序（打开F12）
+            加载已解压扩展程序：devtools\packages\shell-chrome 文件
+        ok
+
+1.2 vue-cli
+yarn global add @vue/cli
+npm install -g @vue/cli
+
+1.3 vite打包
+vite据说最接近原生ES，构建速度快
+yarn create vite <project-name> --template vue
+npm init vite@latest <project-name> --template vue
+
+1.4 ts
+vue2引入ts：
+    要用 vue-class-component 强化 vue 组件，让 Script 支持 TypeScript 装饰器
+    用 vue-property-decorator 来增加更多结合 Vue 特性的装饰器
+    引入 ts-loader 让 webpack 识别 .ts .tsx 文件
+    .....
+vue3
+    option API
+    composition API
+        比较有代表性的api就是 ref 和 reactive 
+
+1.5 Vue.createApp
+1.5.1 与vue2不同
+vue2 入口文件main.js
+    new Vue({
+        render: h = h(App)
+    }).$mount('#app')
+
+vue3 
+    import { createApp } from 'vue'
+    import App from './App.vue'
+
+    createApp(App).mount('#app') 
+
+在大型应用的时候，可能会有声明多个vue实例的情况，多个单页应用共享一套js运行环境的是，怎么隔离？
+    createApp就能做到
+
+<script>
+    Vue.component('child-comp', {
+        template: '<h1>子组件</h1>'
+    })
+    const vue1 = new Vue({
+        template: `<div>
+            <child-comp></child-comp>
+        </div>`
+    })
+    vue1.$mount('#app1')
+    const vue2 = new Vue({
+        template: `<div>
+            <child-comp></child-comp>
+        </div>`
+    })
+    vue2.$mount('#app2')
+
+    // 期待全局组件只能在实例1控制的视图区域中使用
+    // vue2的组件系统设计中，所有的vue实例是共享一个Vue构造函数对象的（包括全局指令/全局组件等），无法做到完全隔离
+</script>
+<script>
+    const vue1 = Vue.createApp({
+        template: `<div>
+            <child-comp></child-comp>
+        </div>`
+    })
+    vue1.$mount('#app1')
+    vue1.component('child-comp', {
+        template: '<h1>子组件</h1>'
+    })
+    // 这样创建出来的实例拥有完全隔离的环境，不会被应用于其他实例的任何全局配置所污染。
+    const vue2 = Vue.createApp({
+        template: `<div>
+            <child-comp></child-comp>
+        </div>`
+    })
+    vue2.$mount('#app2')
+</script>
+
+1.5.2 template与render
+template方式是要通过compiler编译成render，再继续之后的流程。
+
+render（h）- 》 virtual Dom - 》UI真实dom
+
+template - 》parse - 》ast 抽象语法树 - 》compiler - 》render（h）- 》 virtual Dom - 》UI真实dom
+
+1.6 vetur
+提供vscode支持
+
+2. 捋一捋相关点
+2.1 directives
+v-bind  :
+v-on    @ 
+v-model
+v-if
+v-for
+v-once
+v-html  用户提供的不能作为插值，防止xss攻击
+
+2.2 组件树
+组件 + options
+// Create Vue application
+const app = Vue.createApp(...)
+
+// Define a new component called todo-item
+app.component('todo-item', {
+  props: ['todo'],
+  template: `<li>{{ todo.text }}</li>`
+})
+
+// Mount Vue application
+app.mount(...)
+
+2.3 应用入口 & 组件
+
+2.3.1 createApp
+实例用于注册该应用要用到的公共量
+    const app = Vue.createApp({})
+    app.component('SearchInput', SearchInputComponent)
+    app.directive('focus', FocusDirective)
+    app.use(LocalePlugin)
+且实例的方法返回该实例，实现链式使用
+    Vue.createApp({})
+    .component('SearchInput', SearchInputComponent)
+    .directive('focus', FocusDirective)
+    .use(LocalePlugin)
+
+2.3.2 根组件
+createApp传的参数配置就是配置根组件，然后挂载dom
+    const RootComponent = {
+        /* options */
+    }
+    const app = Vue.createApp(RootComponent)
+    const vm = app.mount('#app')
+
+    * mount方法不返回vue实例，返回根组件实例
+每个组件都有自己的组件实例
+
+2.3.3 组件实例的属性
+data中配置的属性，通过组件实例可访问
+    vm.count
+
+2.3.4 生命周期/钩子
+set up data observation——compile the template——mount the instance to the DOM——update the DOM when data changes
+生命周期能够让我们将代码放入想要执行的地方。
+
+2.4 template
+
+（1）插值
+{{}} —— replace the value
+v-html
+v-bind
+表达式
+
+（2）指令
+表达式可以在{{}}、指令属性值，也可以动态参数
+<a v-bind:[attributeName]="url"> ... </a>
+<a v-on:[eventName]="doSomething"> ... </a>
+
+修饰符
+    .prevent 修饰符告诉 v-on 指令对于触发的事件调用 event.preventDefault()：
+        <form v-on:submit.prevent="onSubmit">...</form>
+
+2.5 data & method
+2.5.1 data
+组件的 data 选项是一个函数,返回一个对象，并以 $data 的形式存储在组件实例中
+    const vm = app.mount('#app')
+
+    console.log(vm.$data.count) // => 4
+    console.log(vm.count)       // => 4
+
+2.5.2 methods
+vue自动绑定this，在模板中，当做事件监听使用
+
+防抖和节流，使用lodash等库可实现
+<script src="https://unpkg.com/lodash@4.17.20/lodash.min.js"></script>
+<script>
+  Vue.createApp({
+    methods: {
+      // 用 Lodash 的防抖函数
+      click: _.debounce(function() {
+        // ... 响应点击 ...
+      }, 500)
+    }
+  }).mount('#app')
+</script>
+
+
+
+
+
+实践
+
+安装
+
+vue create xxx // 我的git版本低，没法进行> 选择
+vue add typescript
+
+npm init @vitejs/app viteTest --template vue-ts

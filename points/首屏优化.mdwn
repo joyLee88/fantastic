@@ -1,0 +1,151 @@
+F12 performance的timing, 看各个步骤的耗时
+
+# 白屏
+浏览器从响应用户输入网址地址，到浏览器开始显示内容的时间。
+白屏时间：performance.timing.responseStart - performance.timing.navigationStart
+
+为什么会首屏白屏 ?
+    浏览器渲染包含 HTML 解析、DOM 树构建、CSSOM 构建、JavaScript 解析、布局、绘制等等.
+    * 等待 HTML 文档返回，此时处于白屏状态。
+    * 对 HTML 文档解析完成后进行首屏渲染，因为项目中加了灰色的背景色，因此呈现出灰屏。
+    * 进行文件加载、JS 解析等过程，导致界面长时间出于灰屏中。
+    * 当 Vue 实例触发了 mounted 后，界面显示出大体框架。
+    * 调用 API 获取到时机业务数据后才能展示出最终的页面内容。
+
+FP：仅有一个 div 根节点。
+FCP：包含页面的基本框架，但没有数据内容。
+FMP：包含页面所有元素及数据。
+以 Vue 为例， 在其生命周期中，mounted 对应的是 FCP，updated 对应的是 FMP
+
+# 首屏
+浏览器从响应用户输入网址地址，到首屏内容渲染完成的时间，此时整个网页不一定要全部渲染完成，但在当前视窗的内容需要。白屏时间是首屏时间的一个子集。
+
+首屏时间：我们可以简单地通过DOMContentLoad去测量，如下:
+document.addEventListener('DOMContentLoaded', (event) => {
+    console.log('first contentful painting');
+});
+web是CSR（客户端渲染）的渲染方式，以上的首屏时间获取方式不一定可靠，浏览器可能在接口内容还没返回前，就触发了DOMContentLoaded事件，导致得出的首屏时间要早很多。所以有时需要手动去计算时间（手动埋点），可以定义在某块主要内容渲染完成的那一刻就意味着完成了首屏渲染。
+
+正常来说，首屏加载时间不应该超过2s~3s。
+
+如果一个页面完成首屏加载需要5秒以上，可能用户下次就从心理排斥打开这个页面，首屏加载时间对用户留存率影响很大。
+
+# 首屏加载优化方案
+1. 前端的资源动态加载
+（1）路由动态加载 
+最常用的做法，以页面为单位，进行动态加载。
+路由组件如果不按需加载的话，就会把所有的组件一次性打包到app.js中，导致首次加载内容过多。
+要实现路由懒加载：
+方式1：
+{
+  name: 'vipBoxActivity',
+  path:'vipBoxActivity',
+  component(resolve) {
+    require(['COMPONENTS/vipBox/vipBoxActivity/main.vue'], resolve)
+  }
+},
+方式2：
+{
+  path: 'buyerSummary',
+  name: 'buyerSummary',
+  component: () => import('VIEWS/buyer/buyerSummary/index'),
+},
+
+（2）组件动态按需加载
+如使用ui库的时候，按需加载
+import MuseUI from 'muse-ui'
+import 'muse-ui/dist/muse-ui.css'
+import 'muse-ui/dist/theme-light.css'
+Vue.use(MuseUI)
+
+全部引入，改为部分注册：
+import appBar from 'muse-ui/src/appBar'
+import toast from 'muse-ui/src/toast'
+import drawer from 'muse-ui/src/drawer'
+import popup from 'muse-ui/src/popup'
+
+Vue.component(appBar.name, appBar);
+Vue.component(toast.name, toast);
+Vue.component(drawer.name, drawer);
+Vue.component(popup.name, popup);
+
+或是在要用到的页面，做局部引用
+
+（3）图片懒加载
+越来越多的浏览器支持原生的懒加载，通过给img标签加上loading="lazy来开启懒加载模式
+
+2. 页面使用骨架屏
+在首屏加载完成之前，通过渲染一些简单元素进行占位。
+骨架屏的好处在于可以减少用户等待时的急躁情绪。这点很有效，在很多成熟的网站都有大量应用。没有骨架屏的话，一个loading图也是可以的。
+
+3. 利用好script标签的async和defer这两个属性。功能独立且不要求马上执行的js文件，可以加入async属性。如果是优先级低且没有依赖的js，可以加入defer属性
+
+4. Webpack开启gzip压缩
+善用webpack-bundle-analyzer优化项目依赖
+
+5. 静态文件缓存
+现在流行的方式是文件hash+强缓存的一个方案。比如hash+ cache control: max-age=1年。
+
+6. cdn分发
+使用CDN加速，将通用的库从vendor进行抽离
+通过在多台服务器部署相同的副本，当用户访问时，服务器根据用户跟哪台服务器距离近，来决定哪台服务器去响应这个请求。
+
+使用 CDN 剔除这部分不经常变化的公共库。我们将vue，vue-router，vuex，axios，jquery，underscore，使用CDN资源引入
+（1）首先我们在index.html中，添加CDN代码
+<body>
+    <div id="app"></div>
+    <script src="https://cdn.bootcss.com/vue/2.6.10/vue.min.js"></script>
+    <script src="https://cdn.bootcss.com/vuex/3.1.0/vuex.min.js"></script>
+    <script src="https://cdn.bootcss.com/vue-router/3.0.4/vue-router.min.js"></script>
+    <script src="https://cdn.bootcss.com/axios/0.18.0/axios.min.js"></script>
+    <script src="https://cdn.bootcss.com/element-ui/2.7.2/index.js"></script>
+    <script src="https://cdn.bootcss.com/jquery/3.4.0/jquery.min.js"></script>
+    <script src="https://cdn.bootcss.com/underscore.js/1.9.1/underscore-min.js"></script>
+  </body>
+
+（2）在vue.config.js中加入webpack配置代码，关于webpack配置中的externals
+configureWebpack: {
+  externals: {
+    'vue': 'Vue',
+    'vue-router': 'VueRouter',
+    'vuex': 'Vuex',
+    'element-ui': 'ELEMENT',
+    'axios': 'axios',
+    'underscore' : {
+      commonjs: 'underscore',
+      amd: 'underscore',
+      root: '_'
+    },
+    'jquery': {
+      commonjs: 'jQuery',
+      amd: 'jQuery',
+      root: '$'
+    }
+  },
+}
+（3）如VueRouter Vuex ElementUI ，通过 CDN 引入，不再使用Vue.use(xxx)，也不在需import Vue from 'vue', import VueRouter from 'vue-router' 等。剔除全家桶和Element-ui等只有，剩下的需要首次加载 vendors 就很小了。
+
+这样
+（1）加快打包速度。分离公共库以后，每次重新打包就不会再把这些打包进 vendors 文件中。
+
+（2）CDN减轻自己服务器的访问压力，并且能实现资源的并行下载。浏览器对 src 资源的加载是并行的(执行是按照顺序的)。
+
+7. 服务器端缓存
+数据库查询缓存是可以设置缓存的，这个对于处于高频率的请求很有用。浏览器一般不会对content-type: application/json；的接口进行缓存，所以有时需要我们手动地为接口设置缓存。比如一个用户的签到状态，它的缓存时间可以设置到明天之前。
+
+8. 服务端渲染SSR
+通过预渲染提升网页首帧优化，从而优化了白屏问题，提升用户体验
+在前端渲染领域，主要有以下几种方式可供选择：
+                        优点                                        缺点
+（1）CSR：不依赖数据FP； 时间最快；客户端用户体验好；内存数据共享。SEO 不友好FCP 、FMP 慢
+（2）预渲染：不依赖数据FCP；时间比 CSR 快；客户端用户体验好；内存数据共享。SEO 不友好FMP 慢
+（3）SSR：SEO 友好；首屏性能高，FMP 比 CSR 和预渲染快。客户端数据共享成本高模板维护成本高
+（4）同构：SEO 友好；首屏性能高，FMP 比 CSR 和预渲染快；客户端用户体验好；内存数据共享；客户端与服务端代码公用，开发效率高。Node 容易形成性能瓶颈
+
+同构方案集合 CSR 与 SSR 的优点，可以适用于大部分业务场景。但由于在同构的系统架构中，连接前后端的 Node 中间层处于核心链路，系统可用性的瓶颈就依赖于 Node ，一旦作为短板的 Node 挂了，整个服务都不可用。
+
+
+8. Nginx的gzip压缩
+在浏览器的控制台Content-Encoding一栏会显示gzip，否则没有。Nginx如果开启gzip，请自行搜索，或者叫服务端来开启。
+
+

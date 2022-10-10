@@ -1,0 +1,510 @@
+# 测试本机浏览器在 User-Agent 字符串中提供的主要浏览器版本
+https://is-chrome-100-yet.glitch.me/
+	从 Chrome 96 开始，直到 Chrome 99，Chrome 将提供一个试验性标志，来把 UA 中的浏览器版本强制改为 100
+	在 chrome://flags中发开 #force-major-version-to-100 来开启这个实验
+再访问 「https://is-chrome-100-yet.glitch.me/」 就可以发现 UA 中的主要版本号已经变成 100 啦
+
+# 一、浏览器内核
+主要分成两部分：渲染引擎(layout engineer或Rendering Engine)和JS引擎
+1. 渲染引擎：
+负责取得网页的内容（HTML、XML、图像等等）、整理讯息（例如加入CSS等），以及计算网页的显示方式，然后会输出至显示器或打印机。
+浏览器的内核的不同对于网页的语法解释会有不同，所以渲染的效果也不相同。
+所有网页浏览器、电子邮件客户端以及其它需要编辑、显示网络内容的应用程序都需要内核。
+
+2. js引擎
+解析和执行javascript来实现网页的动态效果
+
+--- 最开始渲染引擎和JS引擎并没有区分的很明确，后来JS引擎越来越独立，内核就倾向于只指渲染引擎
+
+3. 常用浏览器内核
+Trident内核：IE,MaxThon,TT,The World,360,搜狗浏览器等。[又称MSHTML]
+Gecko内核：Netscape6及以上版本，FF,MozillaSuite/SeaMonkey等
+Presto内核：Opera7及以上。[Opera内核原为：Presto，现为：Blink;]
+Webkit内核：Safari,Chrome等。[ Chrome的Blink（WebKit的分支）]
+
+# 二、浏览器缓存
+分为强缓存和协商缓存。
+
+当客户端请求某个资源时，获取缓存的流程如下：
+1. 先根据这个资源的一些 http header 判断它是否命中强缓存，如果命中，则直接从本地获取缓存资源，不会发请求到服务器；
+2. 当强缓存没有命中时，客户端会发送请求到服务器，服务器通过另一些request header验证这个资源是否命中协商缓存，称为http再验证，如果命中，服务器将请求返回，但不返回资源，而是告诉客户端直接从缓存中获取，客户端收到返回后就会从缓存中获取资源；
+强缓存和协商缓存共同之处在于，如果命中缓存，服务器都不会返回资源；区别是，强缓存不对发送请求到服务器，但协商缓存会。
+当协商缓存也没命中时，服务器就会将资源发送回客户端。
+3. 当 ctrl+f5 强制刷新网页时，直接从服务器加载，跳过强缓存和协商缓存；
+4. 当 f5刷新网页时，跳过强缓存，但是会检查协商缓存；
+
+* 强缓存：
+
+Expires（该字段是 http1.0 时的规范，值为一个绝对时间的 GMT 格式的时间字符串，代表缓存资源的过期时间）
+Cache-Control:max-age（该字段是 http1.1的规范，强缓存利用其 max-age 值来判断缓存资源的最大生命周期，它的值单位为秒）
+
+response头，cache-control（缓存开关）字段验证是否可用，请求头也可以模拟，勾选disable chche
+
+	Cache-Control：用于判断强缓存，也就是是否直接取在客户端缓存文件，不请求后端。
+	
+	请求时的缓存指令包括：no-cache、no-store、max-age、max-stale、min-fresh、only-if- cached， 响应消息中的指令包括：public、private、no-cache、no-store、no-transform、must- revalidate、proxy-revalidate、max-age。
+
+	- no-cache：不使用本地缓存。需要使用缓存协商，先与服务器确认返回的响应是否被更改，如果之前的响应中存在ETag，那么请求的时候会与服务端验证，如果资源未被更改，则可以避免重新下载。
+	- no-store：直接禁止游览器缓存数据，每次用户请求该资源，都会向服务器发送一个请求，每次都会下载完整的资源。
+	- public：可以被所有的用户缓存，包括终端用户和CDN等中间代理服务器。
+	- private：只能被终端用户的浏览器缓存，不允许CDN等中继缓存服务器对其缓存。
+	- max-age：指示客户机可以接收生存期不大于指定时间（以秒为单位）的响应。
+
+* 协商缓存
+
+Last-Modified（值为资源最后更新时间，随服务器response返回，即使文件改回去，日期也会变化）
+** If-Modified-Since（通过比较两个时间来判断资源在两次请求期间是否有过修改，如果没有修改，则命中协商缓存）
+ETag（表示资源内容的唯一标识，随服务器response返回，仅根据文件内容是否变化判断）
+** If-None-Match（服务器通过比较请求头部的If-None-Match与当前资源的ETag是否一致来判断资源是否在两次请求之间有过修改，如果没有修改，则命中协商缓存）
+
+读取不到强缓存，发送请求，请求头带上If-Modified-Since和If-None-Match，服务器判断是否需要更新。
+	》 若资源更新，那么返回资源和 200 状态码
+	》 如果资源未更新，那么告诉浏览器直接使用缓存获取资源
+
+# 三、浏览器渲染
+（1）首先解析收到的文档，根据文档定义构建一棵DOM树，DOM树是由DOM元素及属性节点组成的。
+（2）然后对css进行解析，生成CSSOM规则树。
+（3）根据DOM树和CSSOM规则树构建渲染树。渲染树的节点被称为渲染对象，渲染对象是一个包含颜色和大小等各类属性的矩形，渲染对象和DOM元素相对应，但这种对应关系不是一对一的，不可见的DOM元素不会被插入渲染树。还有一些DOM元素对应几个可见对象，他们一般是一些具有复杂结构的元素，无法用一个矩形来描述。
+（4）当渲染对象被创建并添加到渲染树中，他们并没有位置和大小，所以当浏览器生成渲染树后，就会根据渲染树来进行布局（回流）。这一阶段浏览器要做的事情是要弄清楚各个节点在页面中的确切位置和大小（自动重排）。
+（5）布局阶段结束后是绘制阶段，遍历渲染树并调用渲染对象的 paint 方法将它们的内容显示在屏幕上，绘制使用UI基础组件。
+
+so理解：
+当输入链接时候，通过网络3次握手，获取到网页文档数据。渲染引擎通过网络获得所请求文档的内容，在取得内容之后的基本流程：
+：
+	-> 解析html以构建dom树和css树
+	-> DOM和CSSOM合并，构建render树 
+	-> 浏览器根据render树，布局render树，计算每个节点位置等
+	-> 通过显卡， 绘制render树到屏幕上
+
+* 重绘Repaint
+当节点需要更改外观而不会影响布局的，比如改变 color 就叫称为重绘
+
+* 回流Reflow
+布局或者几何属性需要改变就称为回流。
+
+当render tree中的一部分(或全部)因为元素的规模尺寸，布局，隐藏等改变而需要重新构建。这就称为回流。每个页面至少需要一次回流，就是在页面第一次加载的时候。
+
+* 回流必定会发生重绘，重绘不一定会引发回流。回流所需的成本比重绘高的多，改变父节点里的子节点很可能会导致父节点的一系列回流。
+
+## 哪些情况引起重绘和回流
+不同的条件下发生重排的范围及程度会不同：
+	1.页面初始渲染
+	2.改变字体，改变元素尺寸（宽、高、内外边距、边框，改变元素位置等各种情况：
+             设置 style 属性的值 
+
+             激活 CSS 伪类，比如 :hover
+
+             操作 class 属性
+
+            css3的某些属性（https://csstriggers.com/  结合此链接查看哪些属性会触发重排、哪些属性会触发重绘以及哪些属性会触发合成；）
+
+		（注意：如果修改属性不影响布局则不会发生重排）
+
+	3.改变元素内容（文本或图片等或比如用户在input框中输入文字）
+
+	4.添加/删除可见DOM元素（注意：如果是删除本身就display:none的元素不会发生重排；visibility:hidden的元素显示或隐藏不影响重排）
+
+	5.fixed定位的元素,在拖动滚动条的时候会一直回流
+	6.调整窗口大小（Resizing the window）
+	7.计算 offsetWidth 和 offsetHeight 属性【注释2】
+		【注释2：flush队列】
+
+		浏览器是聪明的，当对以下属性进行操作的时候：
+
+		包括：offsetTop、offsetLeft、 offsetWidth、offsetHeight、scrollTop、scrollLeft、scrollWidth、scrollHeight、clientTop、clientLeft、clientWidth、clientHeight、getComputedStyle() (currentStyle in IE)。
+
+		浏览器不会马上操作它们，而是会先缓存在队列中，有一定时间顺序去执行这些操作，但是在这过程中我们需要去获取在该队列中的属性时，浏览器为取得正确的值就会触发重排。这样就使得浏览器的优化失效了。
+
+		所以，在多次使用这些值时应进行缓存。
+
+## 以下几个动作可能会导致性能问题：
+
+改变 window 大小
+改变字体
+添加或删除样式
+文字改变
+定位或者浮动
+盒模型
+
+重绘和回流其实也和 Eventloop 有关。
+    当 Eventloop 执行完 Microtasks 后，会判断 document 是否需要更新，因为浏览器是 60Hz 的刷新率，每 16.6ms 才会更新一次。
+    然后判断是否有 resize 或者 scroll 事件，有的话会去触发事件，所以 resize 和 scroll 事件也是至少 16ms 才会触发一次，并且自带节流功能。
+    判断是否触发了 media query
+    更新动画并且发送事件
+    判断是否有全屏操作事件
+    执行 requestAnimationFrame回调
+    执行 IntersectionObserver 回调，该方法用于判断元素是否可见，可以用于懒加载上，但是兼容性不好 更新界面
+    以上就是一帧中可能会做的事情。如果在一帧中有空闲时间，就会去执行 requestIdleCallback回调
+
+如何减少重绘和回流：
+1. 使用 transform 替代 top
+2. 使用 visibility 替换display: none ，因为前者只会引起重绘，后者会引发回流（改变了布局）
+3. 不要把节点的属性值放在一个循环里当成循环里的变量
+4. 不要使用 table 布局，可能很小的一个小改动会造成整个 table 的重新布局
+5. 动画实现的速度的选择，动画速度越快，回流次数越多，也可以选择使用requestAnimationFrame
+6. CSS 选择符从右往左匹配查找，避免节点层级过多
+7. 将频繁重绘或者回流的节点设置为图层，图层能够阻止该节点的渲染行为影响别的节点。比如对于 video 标签来说，浏览器会自动将该节点变为图层。
+8. 避免使用css表达式(expression)，因为每次调用都会重新计算值（包括加载页面）
+9. 尽量使用 css 属性简写，如：用 border 代替 border-width, border-style, border-color
+10. 批量修改元素样式：elem.className 和 elem.style.cssText 代替 elem.style.xxx
+11. 需要要对元素进行复杂的操作时，可以先隐藏(display:"none")，操作完成后再显示
+12. 需要创建多个DOM节点时，使用DocumentFragment创建完后一次性的加入document
+13. 缓存Layout属性值，如：var left = elem.offsetLeft; 这样，多次使用 left 只产生一次回流
+
+eg.
+* 1.修改html元素中对应的class名，利用class替换样式
+		< script type = "text/javascript" >
+			$(document).ready(function ()
+			{
+				var el = $('id');
+				//1
+				el.css('width', '200px');
+				el.css('height', '200px');
+				//2
+				el.css({
+					'width' : '200px;',
+					'height' : '200px;'
+				});
+				//3 
+				el.addClass('changeStyle');
+			});
+		</script >
+
+	2.csstext（利用cssText属性合并所有改变，然后一次性写入）
+		var s = document.body.style; 
+		s.padding = "2px"; // 回流+重绘
+		s.border = "1px solid red"; // 再一次 回流+重绘 
+		s.color = "blue"; // 再一次重绘
+		s.backgroundColor = "#ccc"; // 再一次 重绘 
+		s.fontSize = "14px"; // 再一次 回流+重绘 
+		// 添加node，再一次 回流+重绘
+		document.body.appendChild(document.createTextNode('abc!’));
+
+		----------------------------------------------------------------------------
+		// 不好的写法
+		var left = 1;
+		var top = 1;
+		el.style.left = left + "px";
+		el.style.top = top + "px";
+		// 比较好的写法 
+		el.className += " className1";
+		// 比较好的写法 
+		el.style.cssText += "; left: " + left + "px; top: " + top + "px;";
+
+	3.display:none（隐藏元素，应用修改，重新显示）
+		var list = document.getElementById("list");
+
+		list.style.display = 'none’;
+
+		appendDataToElement(list,data);
+
+		list.style.display = 'block';
+
+	4.cloneNode （将原始元素拷贝到一个脱离文档的节点中,修改副本,完成后再替换回去； ）
+		var old = document.getElementById("list");
+
+		var clone = old.cloneNode(true);
+
+		appendDataToElement(clone,data);
+
+		old.parentNode.replaceChild(clone,old);
+
+	* 5.document.createDocumentFragment()；（使用文档片段（document fragment）在当前DOM之外构建一个子树，再插回去）
+		var fragment = document.createDocumentFragment();
+		var list = document.getElementById("list");
+		for (var i = 0; i < 10; i++)
+		{
+			var _li = document.createElement("li");
+			_li.onmouseover = function ()
+			{
+				this.style.backgroundColor = "#22b909";
+				this.style.width = "120px";
+				this.style.height = "50px";
+			}
+			_li.onmouseout = function ()
+			{
+				this.style.backgroundColor = "";
+				this.style.width = "100px";
+				this.style.height = "40px";
+			}
+			fragment.appendChild(_li);
+		}
+		list.appendChild(fragment);
+
+	6.使用trsansform
+        CSS的最终表现分为以下四步：Recalculate Style -> Layout -> Paint Setup and Paint -> Composite Layers
+
+        按照中文的意思大致是 查找并计算样式 -> 排布 -> 绘制 -> 组合层。
+
+       由于transform是位于Composite Layers层，而width、left、margin等则是位于Layout层，在Layout层发生的改变必定导致Paint Setup and Paint -> Composite Layers，
+
+       所以相对而言使用transform实现的动画效果肯定比使用改变位置(margin-left等)这些更加流畅。
+
+# 四、浏览器事件循环机制 event loop
+javaScript 语言的执行环境是单线程的，一次只能执行一个任务，多任务需要排队等候，而且定时器、网页请求、等待鼠标点击等，这种模式可能会阻塞代码，导致代码执行效率低下。为了避免这个问题，出现了异步编程。一般是通过 callback 回调函数、事件发布/订阅、Promise 等来组织代码，本质都是通过回调函数来实现异步代码的存放与执行。只有一个主线程来处理所有的任务，非阻塞靠的就是 event loop（事件循环）。
+
+Js是单线程语言，本质是通过回调函数模拟异步操作。要实现非阻塞，通过事件循环机制。
+	js任务分为：同步任务、异步任务。同步任务依次进入执行栈，异步任务会放入消息队列。
+		异步任务：宏任务队列和微任务队列
+
+事件循环机制分三部分：主线程、宏任务队列、微任务队列
+	宏任务：整体代码、setTimeout、setInterval、I/O操作
+	微任务：new Promise().then（前提是promise中resolve执行了）、MutationObserver(前端回溯)、nextTick
+	为什么要区分宏微？
+		宏任务队列保证先进先出执行；但是某些任务优先级比较高，需要通过微任务来调节。
+
+	具体循环机制：
+		先执行主线程，执行同步任务即宏任务整体script（遇到异步宏任务放宏任务、遇到微任务放微任务）——执行微任务
+		开始一轮：宏任务（创建并添加微任务）——执行微任务——UI render——下一轮
+
+	node中的事件循环和浏览器中的事件循环有什么区别？
+		宏任务的执行顺序：
+			timers定时器：执行已安排的setTimeout和setInterval的回调函数
+			pending callback 待定回调：执行延迟到下一个循环迭代的I/O回调
+			idle，prepare：仅系统内部使用
+			poll：检索新的I/O事件，执行与I/O相关的回调
+			check：执行setImmediate()回调函数
+			close callback: socket.on('close', () => {})
+		微任务和宏任务在node的执行顺序
+			node v10以前：
+				执行完一个阶段中的所有任务
+				执行nextTick队列里的内容
+				执行完微任务队列的内容
+			node V10以后：
+				与浏览器的行为一致
+
+> eg1.
+	async function async1() {
+		console.log('async1 start');
+		await async2(); // == new promise(() => { async2() }) 宏任务同步代码
+		console.log('async1 end'); // == .then() 微任务 回调
+	}
+	async function async2() {
+		console.log('async2')
+	}
+	console.log('script start'); 宏任务同步代码
+	setTimeout(function(){
+		console.log('setTimeout')  下一轮宏任务异步代码
+	}, 0)
+	async1();  宏任务同步代码
+	new Promise(function(resolve) { 宏任务同步代码
+		console.log('promise1')
+		resolve();
+	}).then(function() {  resolve已执行，then放入微任务 回调
+		console.log('promise2')
+	})
+	console.log('script end') 宏任务同步代码
+
+	// 打印：先执行主线程和当前宏任务，添加宏任务和微任务队列，执行微任务，再执行下一轮宏任务
+	script start
+	async1 start
+	async2
+	promise1
+	script end
+	async1 end
+	promise2
+	setTimeout
+
+eg.2
+	console.log('start') //宏任务同步代码
+	setTimeout(() => { //宏任务异步代码 -》下一轮
+		console.log('children2');
+		Promise.resolve().then(() => { //微任务 回调异步 -> 下一轮？？？ 并没有，结合js解释性语言特性，这相当于同步代码，所以3在5前面！！！
+			console.log('children3')
+		})
+	}, 0)
+
+	new Promise(function(resolve, rej) {  //宏任务同步代码
+		console.log('children4')  //宏任务同步代码
+		setTimeout(function() { //宏任务异步代码 -》下一轮
+			console.log('children5');
+			resolve('children6')
+		}, 0)
+	}).then(res => { //resolve是在宏任务异步中，还没执行，promise状态未完成，所以then不能放当前微任务》下一轮
+		console.log('children7')
+		setTimeout(() => { //宏任务异步代码 -》下下轮
+			console.log(res)
+		}, 0)
+	})
+	// 打印
+	start
+	children4
+	<!--当前宏任务同步代码执行完成，查看微任务，没有，执行下一轮宏任务 -->
+	children2
+	children3
+	children5
+	children7
+	<!-- 下下轮宏任务 -->
+	children6
+	
+eg.3
+	const p = function() {
+		return new Promise((resolve, reject) => {
+			const p1 = new Promise((resolve, reject) => {
+				setTimeout(() => {
+					resolve(1)  // resolve(2) 已经将promise状态改变了，不会再执行该步了！！！
+				}, 0)
+				resolve(2)  // 微任务，可then
+			})
+			p1.then(res => {
+				console.log(res)
+			})
+			console.log(3) // 宏任务同步
+			resolve(4)
+		})
+	}
+	p.then(res => {
+		console.log(res)
+	})
+	console.log('end') // 宏任务同步
+
+	// 分析
+	p.then 相当于
+	new Promise((resolve, reject) => {
+		const p1 = new Promise((resolve, reject) => {
+			setTimeout(() => {
+				resolve(1)
+			}, 0)
+			resolve(2)
+		})
+		p1.then(res => {
+			console.log(res)
+		})
+		console.log(3) // 宏任务同步
+		resolve(4)
+	}).then(res => {
+		console.log(res)
+	})
+
+	// 打印
+	// 宏任务同步
+	3
+	end
+	// 此轮微任务
+	2
+	4
+
+# 五、cookie sessionStorage   localStorage 共通和区别
+webstorage: 本地存储，存储在客户端，存储字符串，一般5M，节省网络流量，不参与服务器通信
+	window.sessionStorage 当前会话有效，关闭页面即清除，不共享
+	window.localStorage  永久保存，除非清除，在所有同源窗口共享
+	可直接使用api
+		setItem (key, value) —— 保存数据，以键值对的方式储存信息。
+		getItem (key) —— 获取数据，将键值传入，即可获取到对应的value值。
+		removeItem (key) —— 删除单个数据，根据键值移除对应的信息。
+		clear () —— 删除所有的数据
+		key (index) —— 获取某个索引的key
+cookie：4kb，与服务端通信，每次会携带在HTTP头中，Http请求发送set-cookie HTTP头作为响应一部分，根据name=value存储，一般不超过20个。过多会带来性能问题。
+	在所有同源窗口共享
+	默认是浏览器关闭失效，可以设置失效时间。
+	易用性不好，需要自己封装
+
+	注意xss注入，不要存储敏感信息
+
+对比：
+1. cookie
+数据生命周期	一般由服务器生成，可以设置过期时间
+数据存储大小	4K
+与服务端通信	每次都会携带在 header 中，对于请求性能影响
+
+value	如果用于保存用户登录态，应该将该值加密，不能使用明文的用户标识
+http-only	不用通过 JS访问 Cookie，减少 XSS攻击
+secure	只能在协议为 HTTPS 的请求中携带
+same-site	规定浏览器不能在跨域请求中携带 Cookie，减少 CSRF 攻击
+
+2. localStorage	sessionStorage
+数据生命周期	页面关闭就清理	除非被清理，否则一直存在
+数据存储大小	5M	5M
+与服务端通信	不参与	不参与
+3. indexDB
+数据生命周期	除非被清理，否则一直存在
+数据存储大小	无限
+与服务端通信	不参与
+
+# 六、侦测浏览器是手机 or PC
+1. navigator.userAgent
+最简单的方法就是分析浏览器的 user agent 字符串，它包含了设备信息。
+
+JS 通过navigator.userAgent属性拿到这个字符串，只要里面包含mobi、android、iphone等关键字，就可以认定是移动设备。缺点是不可靠，因为用户可以修改这个字符串，让手机浏览器伪装成桌面浏览器。
+if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+  // 当前设备是移动设备
+}
+
+// 另一种写法
+if (
+  navigator.userAgent.match(/Mobi/i) ||
+  navigator.userAgent.match(/Android/i) ||
+  navigator.userAgent.match(/iPhone/i)
+) {
+  // 当前设备是移动设备
+}
+
+Chromium 系的浏览器，还有一个navigator.userAgentData属性，也是类似的作用。不同之处是它将 user agent 字符串解析为一个对象，该对象的mobile属性，返回一个布尔值，表示用户是否使用移动设备。
+	const isMobile = navigator.userAgentData.mobile;
+	注意，苹果的 Safari 浏览器和 Firefox 浏览器都不支持这个属性
+
+2. window.screen, window.innerWidth
+通过屏幕宽度，判断是否为手机。window.screen对象返回用户设备的屏幕信息，该对象的width属性是屏幕宽度（单位为像素）
+if (window.screen.width < 500) {
+  // 当前设备是移动设备 
+}
+缺点在于，如果手机横屏使用，就识别不了。
+
+另一个属性window.innerWidth返回浏览器窗口里面的网页可见部分的宽度，比较适合指定网页在不同宽度下的样式。
+const getBrowserWidth = function() {
+  if (window.innerWidth < 768) {
+    return "xs";
+  } else if (window.innerWidth < 991) {
+    return "sm";
+  } else if (window.innerWidth < 1199) {
+    return "md";
+  } else {
+    return "lg";
+  }
+};
+
+3. window.orientation
+侦测屏幕方向，手机屏幕可以随时改变方向（横屏或竖屏），桌面设备做不到。
+window.orientation属性用于获取屏幕的当前方向，只有移动设备才有这个属性，桌面设备会返回undefined
+if (typeof window.orientation !== 'undefined') {
+  // 当前设备是移动设备 
+}
+
+4. touch 事件
+手机浏览器的 DOM 元素可以通过ontouchstart属性，为touch事件指定监听函数。桌面设备没有这个属性。
+function isMobile() { 
+  return ('ontouchstart' in document.documentElement); 
+}
+
+// 另一种写法
+function isMobile() {
+  try {
+    document.createEvent("TouchEvent"); return true;
+  } catch(e) {
+    return false; 
+  }
+}
+
+5. window.matchMedia()
+结合 CSS 来判断。
+
+CSS 通过 media query（媒介查询）为网页指定响应式样式。如果某个针对手机的 media query 语句生效了，就可以认为当前设备是移动设备。
+
+window.matchMedia()方法接受一个 CSS 的 media query 语句作为参数，判断这个语句是否生效。
+	let isMobile = window.matchMedia("only screen and (max-width: 760px)").matches;
+	window.matchMedia()的参数是一个 CSS 查询语句，表示只对屏幕宽度不超过 700 像素的设备生效。它返回一个对象，该对象的matches属性是一个布尔值。如果是true，就表示查询生效，当前设备是手机。
+
+除了通过屏幕宽度判断，还可以通过指针的精确性判断。
+	let isMobile = window.matchMedia("(pointer:coarse)").matches;
+	CSS 语句pointer:coarse表示当前设备的指针是不精确的。由于手机不支持鼠标，只支持触摸，所以符合这个条件。
+
+有些设备支持多种指针，比如同时支持鼠标和触摸。pointer:coarse只用来判断主指针，此外还有一个any-pointer命令判断所有指针。
+	let isMobile = window.matchMedia("(any-pointer:coarse)").matches;
+	any-pointer:coarse表示所有指针里面，只要有一个指针是不精确的，就符合查询条件。
+
+6. react工具包
+import {isMobile} from 'react-device-detect';
+
+if (isMobile) {
+  // 当前设备是移动设备
+}

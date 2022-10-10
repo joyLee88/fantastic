@@ -214,3 +214,107 @@ require入口文件
 
 
 
+# 配置
+webpack 开箱只支持 JavaScript 文件类型，其实还包含 JSON 文件类型。其他静态资源需要通过 loader 来支持。
+
+1. 初始化
+新建文件夹。
+npm init -y 生成 package.json 文件。
+npm i webpack webpack-cli --save-dev 安装 webpack 依赖。
+新建src文件夹，再在文件夹下新建index.js和util.js
+新建webpack.config.js
+    const path = require('path')
+
+    module.exports = {
+    entry: './src/index.js', // 入口文件
+    output: {  // 出口文件
+        path: path.join(__dirname, 'dist'),
+        filename: 'bundle.js'
+    },
+    mode: 'production' // 当前构建环境
+    }
+在package.json中的scripts添加打包命令，执行npm run build
+    npm script 可运行 webpack 原理是 package.json 文件可以读取 node_modules/.bin 目录下的命令，而命令是在模块局部安装时创建的软链接。
+
+2. entry入口
+指定 webpack 打包入口，注意入口文件仅支持 JavaScript 文件。
+entry 配置有两种情况：单页面 和 多页面。
+    entry 配置有两种情况：单页面 和 多页面。
+        entry: './src/index.js'
+    多页面配置下，entry 是一个对象
+        entry： {
+            app: './src/app.js',
+            app2: './src/app2.js'
+        }
+3. output出口
+指定 webpack 文件打包出口，以及命名出口文件。
+一样具备两种配置情况：单页面 和 多页面
+    path 库下两个常用 api 的用法：
+        （1）path.resolve：顺序从右往左，若字符以 / 开头，不拼接前面的路径；若以 ../ 开头，拼接前面的路径，且不包含最后一节的路径；若以 ./ 开头或者没有符号，则拼接前面的路径。
+
+        （2）path.join：顺序从右往左，只是拼接各个 path 片段。
+    
+    单页面配置：
+        const path = require('path')
+
+        module.exports = {
+        entry: './src/index.js',
+        output: {
+            filename: 'bundle.js',
+            path: path.join(__dirname, 'dist')
+        }
+        }
+    多页面配置，[name]中 name 变量与 entry 对象的 key 对应：
+        output: {
+            path: path.join(__dirname, 'dist'),
+            filename: [name].js
+        }
+4. loader
+因 webpack 只支持 JavaScript 和 JSON 文件类型，所以提供 loader 帮助 webpack 去处理其不支持的文件类型，并将它们转化为有效模块，以供应用程序使用，以及被添加到依赖图中。
+    babel-loader	处理 es6+ 语法，将其编译为浏览器可执行的 js 语法
+    vue-loader	支持 .vue 文件的加载和解析
+    style-loader	把 css 以 style 标签插入到 html 文件中
+    css-loader	支持.css文件的加载和解析
+    sass-loader/less-loader	将sass/less文件转换成css
+    file-loader	图片、字体等静态资源打包
+    url-loader	类似于 file-loader，当文件低于限定值转 base64
+    ts-loader	将 Ts 转换成 Js
+    raw-loader	将文件以字符串的形式导入
+
+loader 有两个属性：
+    test：正则匹配文件类型。
+    use：文件转换使用的 loader。
+
+    module.exports = {
+        module: {
+            rules: [{
+            test: /\.txt$/,  // 匹配 txt 文件类型
+            use: 'raw-loader' // 使用 raw-loader
+            }]
+        }
+    }
+
+5. plugin插件
+用于扩展 webpack 的功能，可用于 bundle 文件的优化、资源管理和环境变量注入，运行可在打包的整个周期。
+    SplitChunksPlugin	从 v4 开始，移除了 CommonsChunkPlugin ，取而代之的是optimization.splitChunks。作用是提取公共模块，减小 bundle 体积，优化首屏渲染
+    CleanWebpackPlugin	清理构建目录
+    CopyWebpackPlugin	将文件或者文件夹拷贝到构建的输出目录
+    MiniCSSExtractPlugin	从 v4 开始，移除了 ExtractTextWebpackPlugin，取而代之的是 MiniCSSExtractPlugin。作用是将 css 从 bundle 文件里提取成一个独立的 css 文件，以 link 标签的形式注入 html 中
+    CssMinimizerWebpackPlugin	压缩 CSS 代码
+    HotModuleReplacementPlugin	模块热更新
+    HtmlWebpackPlugin	创建 html 文件，并将静态文件插入到这个 html 文件中
+    UglifyjsPlugin	压缩 js，从 v4 开始，已经内置。
+    TerserWebpackPlugin	压缩 js，从 v5 开始，已经内置。
+
+module.exports = {
+  plugins: [
+    new HTMLWebpackPlugin({
+      template: './src/index.html'
+    })
+  ]
+}
+
+6. mode模式
+区分当前构建环境是生产、还是开发，默认值是production。
+
+值有 production、development、none 三种。

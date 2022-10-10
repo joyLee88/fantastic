@@ -1,3 +1,5 @@
+this doc for recording what I have done, unmade and continuously updated.
+
 # vconsole
 https://github.com/Tencent/vConsole/blob/v3.3.0/doc/tutorial_CN.md
 通过变量控制vconsole显示
@@ -62,6 +64,14 @@ this.$axios.post(this.url, JSON.strigify(parseData))
 [v-cloak] {
     display: none;
 }
+
+# 从后台得到的数据对象，想要添加一个属性
+这时候一般在获取的时候遍历添加进去，必须在被监听的对象之前添加进去
+const result = (res && res.result && res.result.content) || [];
+this.tbs = result.map(item => { // 我要监听的是this.tbs
+    item.accessKeyStatus = false;
+    return item
+})
 
 # vue开发中，父组件添加scoped之后。解决在父组件中无法修改子组件样式问题
 
@@ -181,12 +191,26 @@ new Vue({
 }).$mount('#app')
 
 (4)修改整个App.vue
-
-    <template>
-    <div id="app">
+  <template>
+  <div id="app">
     <router-view/>
-    </div>
-    </template>
+  </div>
+  </template>
+
+  <script>
+  import Vuex from 'vuex';
+
+  export default {
+    name: 'app',
+    mounted() { this.getUserInfo(); },
+    methods: {
+      ...Vuex.mapActions(['getUserInfo']),
+    },
+  };
+  </script>
+
+  地址切换
+  <router-link to="/login/r">注册</router-link>
 
 5. vuex
 (1)npm install vuex --save
@@ -251,6 +275,16 @@ export default new Vuex.Store({
   },
 });
 
+在要用的地方引入
+import Vuex from 'vuex';
+computed: {
+    ...Vuex.mapGetters(['userName', 'userDeptType']),
+  },
+methods: {
+    ...Vuex.mapMutations(['setFixed']),
+    ...Vuex.mapActions(['getUserInfo'])
+}
+
 （3）挂载
 import store from './store'
 
@@ -261,6 +295,9 @@ new Vue({
 }).$mount('#app')
 
 6. axio elementui
+npm install axios element-ui
+
+
 import Vue from 'vue'
 import ElementUI from 'element-ui'
 import App from './App.vue'
@@ -279,6 +316,72 @@ new Vue({
   store,
   render: h => h(App),
 }).$mount('#app')
+
+
+### router传参
+1.地址栏显示：
+const appRoutes = [{
+    path: '/',
+    name: 'index',
+    component: () => import('@/views/Index/Index.vue')
+}, {
+	path: '/login/:type',
+	name: 'login',
+	component: () => import('@/views/PageLogin.vue')
+}]
+
+<div class="btn-re">
+    <router-link to="/login/r">注册</router-link>
+</div>
+<div class="btn-lo">
+    <router-link to="/login/l">登录</router-link>
+</div>
+
+mouted() {
+this.type = this.$route.params.type
+}
+watch:{
+		$route(){
+          this.type = this.$route.params.type
+		}
+	},
+此时通过push，传path或path带params即可
+this.$router.push('/path/type')
+this.$router.push({
+  path: '',
+  params: {
+    type: type
+  }
+})
+
+还有query，类似于get
+
+2. 地址栏不显示
+此时用name, 类似于post
+this.$router.push({
+  name: '',
+  params: {
+    dd: dd
+  }
+})
+但这种方式，要注意刷新，修改初始化的获取方式为：
+mouted() {
+  this.type = 'l'
+}
+不是重新获取参数，或是提前存在了sessionStorage
+
+# vue跳到相同路由的时候，报错Avoided redundant navigation to current location: xxxx
+不影响正常跳转，只要在router/index.js或router.js里重写push方法
+const originalPush = Router.prototype.push;
+Router.prototype.push = function (location) {
+    return originalPush.call(this, location).catch(err => err)
+}
+若还报错，可能是vue-router版本旧，undefined不存在catch
+  npm 升级当前vue-router : npm update vue-router --save
+
+结果发现还是会不行，有的无法跳转？
+  同一个路由，只是param不同
+
 
 7. sourcemap
 vue-cli在vue-config设置
@@ -299,6 +402,7 @@ module.exports = {
 };
 8. 新建vue项目出现error Unexpected ‘debugger‘ statement no-debugger，开启调试模式
 在 eslintConfig 下的 rules 添加 “no-debugger”: “off”, “no-console”: “off”,
+
 
 # 组件开发
 index.js将需要的资源都注入
@@ -324,6 +428,72 @@ tabData: [{
 			img: require('@/assets/imgs/index/ser3.png')
 		}]
 
+# 图片懒加载
+<img v-lazy="url">
+
+# input file上传图片转base64位图片
+const files = e.target.files;
+const file = files[0];
+if (typeof FileReader === 'function') { // 转base64
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  const that = this;
+  reader.onload = event => {
+      let base64Val = event.target.result;
+      that.requestUpload(base64Val, (res1, res2) => {
+          that.loading = false;
+          if (res1 && res1.code == 0) {
+              that.faces = res1.result && (res1.result.objects || []);
+          }
+          if (res2 && res2.code == 0) {
+              that.flags = res2.result && (res2.result.objects || []);
+          }
+      })
+  }
+} else {
+  console.log('该浏览器不支持转base64功能')
+  this.loading = false;
+}
+
+# 本地图片地址转base64位
+<script>
+  // 获取要装换的地址
+  var img = document.querySelector('img').src
+  // 图片地址转base64的方法
+  function getBase64Image(img) {
+    var canvas = document.createElement('canvas')
+    canvas.width = img.width
+    canvas.height = img.height
+    var ctx = canvas.getContext('2d')
+    ctx.drawImage(img, 0, 0, img.width, img.height)
+    var ext = img.src.substring(img.src.lastIndexOf('.') + 1).toLowerCase()
+    var dataURL = canvas.toDataURL('image/' + ext)
+    return dataURL
+  }
+
+  var image = new Image()
+  image.src = img
+  // console.log(image.src)
+  // 解决 canvas 将图片转为base64报错: Uncaught DOMException: Failed to execute 'toDataURL' on
+  //  'HTMLCanvasElement': Tainted canvases may not be exported
+  image.setAttribute('crossOrigin', 'anonymous')
+  image.onload = function () {
+    var base64 = getBase64Image(image)
+    console.log(base64)
+    let img = document.getElementById('img')
+    // base64可以直接当做图片的src去赋值
+    img.setAttribute('src', base64)
+  }
+</script>
+
+# 全角 半角
+半角
+每个半角字符占用一字节空间(一字节有8位)，共256个编码空间。
+半角正则表达式：/[\x00-\xff]/g
+
+全角
+每个全角字符占用两字节空间。
+全角正则表达式：/[^\x00-\xff]/g
 
 # 手机号码输入框
 简单点：
@@ -395,6 +565,53 @@ tabData: [{
     举例：杨元庆001Abc@lenovo.com.cn
   ^[A-Za-z0-9\u4e00-\u9fa5]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$
 
+# input file
+<div class="upload">
+  <div class="upload-btn">
+      <p><img src="@/assets/imgs/online/up.png" width="19" height="19" />上传本地视频</p>
+      <input
+          type="file"
+          accept=".flv,.mkv,.mp4,.avi,.wmv,.3gp,.ts,.mov"
+      />
+  </div>
+  <p>支持视频格式：flv、mkv、mp4、avi、wmv、3gp、ts、mov，大小限制&lt;100MB,视频时长&lt;3分钟</p>
+</div>
+> .upload {
+    width: 100%; height: 240px;
+    background: #eff1f2;
+    border: 2px dashed #d9d9d9;
+    border-radius: 15px;
+    > .upload-btn {
+        position: relative;
+        margin: 72px auto 0;
+        width: 271px; height: 54px;
+        border-radius: 4px; overflow: hidden;
+        cursor: pointer;
+        > p {
+            display: block;
+            background: #1B86FF;
+            text-align: center;
+            line-height: 54px;
+            color: #fff;
+            img {
+                vertical-align: text-bottom; padding-right: 10px;
+            }
+        }
+        > input {
+            position: absolute; right: 0; top: 0;
+            width: 500px; height: 100px;
+        }
+    }
+    > p {
+        text-align: center;
+        margin-top: 23px;
+        font-size: 14px;
+        font-weight: 400;
+        text-align: center;
+        color: #999999;
+        line-height: 19px;
+    }
+}
 
 # component + v-bind:is 实现动态组件添加
 <Tab
@@ -467,16 +684,6 @@ this.$refs.dd
     left: 0;
   }
 
-# vuex
-在要用的地方引入
-import Vuex from 'vuex';
-computed: {
-    ...Vuex.mapGetters(['userName', 'userDeptType']),
-  },
-methods: {
-    ...Vuex.mapMutations(['setFixed']),
-    ...Vuex.mapActions(['getUserInfo'])
-}
 
 # fixed 块遮住body滚动条
 mounted() {
@@ -541,6 +748,22 @@ var agent = navigator.userAgent;
             }
         }
 
+# 高度
+网页可见区域宽： document.body.clientWidth
+网页可见区域高： document.body.clientHeight
+网页可见区域宽： document.body.offsetWidth (包括边线的宽)
+网页可见区域高： document.body.offsetHeight (包括边线的高)
+网页正文全文宽： document.body.scrollWidth
+网页正文全文高： document.body.scrollHeight
+网页被卷去的高： document.body.scrollTop
+网页被卷去的左： document.body.scrollLeft
+网页正文部分上： window.screenTop
+网页正文部分左： window.screenLeft
+屏幕分辨率的高： window.screen.height
+屏幕分辨率的宽： window.screen.width
+屏幕可用工作区高度： window.screen.availHeight
+屏幕可用工作区宽度： window.screen.availWidth
+
 # 将盒子定成100%高度
 vh是css3属性
 以前是js计算
@@ -581,12 +804,235 @@ data: () => ({
 # v-html
 < img onerror="alert(11212)"> 类似这样
 
-最好后台数据过滤，或是少用v-html
+最好后台数据过滤，或是少用v-html； 而且用户输入框使用了v-html绑定的值，慎用
+
+
+# 页面导航栏监听页面滚动位置，显示高亮
+document.body.addEventListener('scroll', that.handleScroll)
+handleChangeTab(index, code) {
+      this.curNav = index;
+      const oTab = document.getElementById('tab_' + code);
+      document.body.scrollTop = oTab.offsetTop - 448;
+    },
+handleScroll() {
+  let sctop = document.body.scrollTop;
+  const navs = this.typeList[this.curType].navs;
+  const h = 448 + 50;
+  if (sctop <= h) {
+    this.curNav = 0;
+    return;
+  }
+  for (let i = 0; i < navs.length; i++) {
+    const item = navs[i];
+    const obj = document.getElementById('tab_' + item.code);
+    console.log(item.code)
+    const objUp = obj.offsetTop - h;
+    const objBo = obj.offsetHeight + obj.offsetTop - h;
+    console.log(obj.offsetTop, obj.offsetHeight)
+    if (sctop < objBo && sctop >= objUp) {
+      this.curNav = i;
+      break;
+    }
+  }
+},
+
+# 输入完成后，回车登录
+mounted(){
+    //绑定事件
+     window.addEventListener('keydown',this.keyDown);
+  }
+
+methods:{
+    keyDown(e){
+        //如果是回车则执行登录方法
+      if(e.keyCode == 13){
+        this.login();
+      }
+    }
+}
+
+destroyed(){
+        window.removeEventListener('keydown',this.keyDown,false);
+  }
+
+# 用户登录信息失效
+在axio层写一个拦截器，只要调用接口，返回403, 就跳转到登录页面（window.location.href)
+修改我的http.js
+    import axios from 'axios';
+    import store from '@/store';
+    import router from '@/router';
+
+    axios.interceptors.response.use(
+      ({ data, headers, config }) => { // data是后台返回的对象
+        // if (config.url.includes('selectAuthorityInfo')) {
+        if (config.url.includes('authorityInfo')) {
+          const intranet = headers['X-user-resource'] || headers['x-user-resource'];
+          localStorage.setItem('intranet', intranet);
+        }
+        return data;
+      },
+      err => {
+        if (err.response && err.response.status == 403) { // 监听http状态
+          store.state.user = {};
+          window.sessionStorage.removeItem('UJZ');
+          router.replace({
+            path: 'login/l',
+            query: {
+              redirect: router.currentRoute.fullPath
+            }
+          })
+        }
+        return Promise.reject(err)
+      },
+    );
+https://www.jianshu.com/p/a0c67f4e145e
+
+若是不仅仅在于调用接口，这时候应该是有个轮询，来随时查看登录状态
+
+# delete请求
+和post不一一样，只有两个参数，post、put、patch有三个
+
+axios.delete(’/api’,{data:{userId:1}})
+
+通过设置config里的data来进行传参
+
+const formDel = (url, param, opt) => {
+	const fd = getFormData(param);
+	// eslint-disable-next-line
+	const h = opt.headers ? opt.headers : {}
+	opt.headers = Object.assign(h, { 'Content-Type': 'application/x-www-form-urlencoded' });
+	// eslint-disable-next-line
+	delete opt.useFormData;
+	return axios.delete(url, {data: fd}, opt);
+};
+
+# slot
+子组件里留一个,绑定数据obj
+  <slot name="a" :obj="obj"></slot>
+父组件使用插槽，但是想要子组件的数据传过来；父组件通过slot-scope就可以拿到子组件slot上绑定的值
+  <child>
+    <div slot="a" slot-scope="props">{{props.obj}}</div>
+  </child>
+
+  有个问题，父组件data有个对象Json{a: {'txt': xxx}, b: {'txt':xxx}....}
+  如果我想用父组件这个data，是获取不到的，会报Json[props.obj] undefined
+    <div slot="a" slot-scope="props">{{Json[props.obj].txt}}</div>
+  最终，还是父亲给child组件传入数据Json
+    <child slot-data="{objcode: Json}">
+      <div slot="a" slot-scope="props">{{props.config[props.obj].txt}}</div>
+    </child>
+    子组件加一个
+    <slot name="a" :obj="obj" :config="slotData && slotData[o.code]"></slot>
+
+# create+watch === compute
+但是某些情况，prop监听的是一个对象；当下次传入的还是这个对象，computed对这个对象是没法监听到变化的，是有限制的；
+watch可以用其他值来判断是否更新这个对象，无论传入对象相同与否。
+
+# 报错：Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+根据上面的解释我们可以得出结论：在v-if为false时，如果我们后续的js操作了v-if控制的dom元素，将会因为该部分dom元素不存在而抛出上述异常。
+针对这个问题，我们可以用v-show来代替v-if，就可以解决这个问题。
+
+# 自定义的组件上不能绑定事件@
+
+# 上传文件的限制
+https://blog.csdn.net/qq_43784821/article/details/120246767?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_title~default-4.no_search_link&spm=1001.2101.3001.4242
+
+# 文件后缀名对应的filetype
+https://blog.csdn.net/zhuyu19911016520/article/details/88714289
+
+# input 文件上传后再次点击没有反应
+需要清空上次的选择
+this.$refs.uploadV.value = '';
+
+# post 下载文件
+文件小或是返回的是文件地址，用get方式下载，window.open或a链接下载
+export const downloadExports = async (id, type) => {
+  const url = `${path}/event/export?id=${id}&type=${type}`;
+  window.open(url, '_blank');
+};
+await downloadExports(this.eventId);
+
+当文件比较大或返回的是文件流，用post方式
+  定义请求：
+  export const wordDown = async (param, opt) => {
+    const url = `${path}/api/aicheck/text/download`;
+    // const opt = {
+    //   useFormData: true,
+    // }
+    // const res = await post(url, param, opt);
+    return await post(url, param, opt, {
+      isAll: true
+    });
+  };
+  使用：
+  async downFile(w) {
+      const data = await wordDown(
+          {
+              html: w
+          },
+          {
+              responseType: "blob"
+          }
+      );
+      this.download(data);
+      },
+  download(res) {
+    <!-- 后端需要设置如下：
+      Access-Control-Expose-Headers : 'Content-Disposition'
+      后台Content-Disposition，需要配合 application/octet- stream
+     -->
+    <!-- 此处要在http拦截器处，将header返回到res里，能够获取到 -->
+      const disposition =
+          res.headers["content-disposition"] ||
+          res.headers["Content-Disposition"]; // issues#67 xp下导出功能无响应
+      const fileName = disposition.match(/filename=(\S*?)(;|$)/)[1];
+      const downloadElement = document.createElement("a");
+      const href = window.URL.createObjectURL(res.data); // 创建下载的链接
+      downloadElement.href = href;
+      downloadElement.download = decodeURI(fileName); // 下载后文件名
+      document.body.appendChild(downloadElement);
+      downloadElement.click(); // 点击下载
+      document.body.removeChild(downloadElement); // 下载完成移除元素
+      window.URL.revokeObjectURL(href); // 释放掉blob对象
+  },
+
+# element
+dialog 会被蒙版遮住：
+  :modal-append-to-body="false" 或  :append-to-body="true"
 
 # 上线前检测
 改icon；logo可到首页；导航可点击块和切换刷新没问题
 
+
+# 部署文件及web端服务
+（1）打开xshell，账户密码登录，将前端文件部署;
+  xshell新建登录ip1,将文件部署
+（2）连接打开nginx web服务器，将文件关联过来
+	cd deploy/jiaozhen // 切换到IP1前端文件所在目录
+	scp -r * xhdev@xx.xx.xx.xx:/home/xhdev/docker-data/jiaozhen-nginx/html // 复制该目录下所有文件到web服务器html下
+
+# 打包提示entrypoint size limit警告
+entrypoint size limit: The following entrypoint(s) combined asset size excee，入口点大小超过了建议的限制244kb
+
+在webpack中配置
+performance: { hints: false }
+
+在vue.config.js配置：
+configureWebpack: config => {
+     if (debug) {
+         config.devtool = 'source-map';
+         config["performance"] = {
+             maxEntrypointSize: 50000000,
+             maxAssetSize: 30000000,
+         }
+     }
+}
+
 ----------------------------------------css------------------------------------
+通过Can I Use[4]来查找某个属性的浏览器兼容性
+CSS的规范，这个比较权威的就是W3C的CSS Working Group
+
+
 css偷懒
 
 CSS Grid Generator：  https://cssgrid-generator.netlify.app/
@@ -598,3 +1044,30 @@ https://grid.layoutit.com/
 
 # 不用flex，块要上下居中
 display: table-cell; vertical-align: middle;
+
+# 图片上下左右自适应
+.box {
+  width: 100px; height: 100px; display:table-cell; vertical-align: middle;
+  background:#000; text-align:center;
+}
+.box img {
+  max-width: 100%; max-height:100%; vertical-align:middle;
+}
+
+# 字数多 省略号
+.ellipsis{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -o-text-overflow: ellipsis;
+}
+鼠标移上去显示全部
+.showEllipsis:hover
+{
+    cursor: pointer;
+    /*background: #000;*/
+    white-space: pre-wrap;
+    width:200px;
+    text-overflow:inherit;
+    overflow:visible;
+}
