@@ -1,0 +1,54 @@
+# webSocket重连
+
+在做重连时，需要注意 onerror 和 onclose 连续执行的问题，通常是使用类似防抖的方法来解决 —— 是增加一个变量来控制重连次数。
+```js
+let connecting = false; // 断开连接后，先触发 onerror，再触发 onclose，主要用于防止重复触发
+  conn();
+  function conn() {
+    connecting = false;
+    if (ctx.state.stateWS.instance && ctx.state.stateWS.instance.close) {
+      ctx.state.stateWS.instance.close();
+    }
+    const url = ctx.state.stateWS.url + "?Authorization=" + getAuthtication();
+    ctx.state.stateWS.instance = new WebSocket(url);
+    ctx.state.stateWS.instance.onopen = () => {
+      ctx.commit(ActionType.SUCCESS);
+    };
+    ctx.state.stateWS.instance.onclose = () => {
+      if (connecting) return;
+      ctx.commit(ActionType.CLOSE);
+      setTimeout(() => {
+        conn();
+      }, 10 * 1000);
+      connecting = true;
+    };
+    ctx.state.stateWS.instance.onerror = () => {
+      if (connecting) return;
+      ctx.commit(ActionType.ERROR);
+      setTimeout(() => {
+        conn();
+      }, 10 * 1000);
+      connecting = true;
+    };
+    ctx.state.stateWS.instance.onmessage = function (
+      this: WebSocket,
+      ev: MessageEvent
+    ) {
+      // logic
+      } catch (e) {
+        console.log("e:", e);
+      }
+    };
+  }
+```
+系统是设计成 7*24 小时不间断运行。所以 websocket 很容易受到一些网络因素或者其它因素的影响发生断开，重连是一项非常重要的功能，同时还应该具备重连日志功能。
+在用户的不同环境中，排查 WebSocket 的连接状态很麻烦，添加一个连接日志功能是比较不错的方案，这样可以很好的看到不同时间的连接情况。
+
+需要注意，这些日志是存储在用户的浏览器内存中的，需要设置上限，到达上限要自动清除早期日志。
+
+# WebSocket 鉴权
+
+websocket 的鉴权是很多人容易忽视的一个点。
+我在系统设计中，restful API 的鉴权是通过在 request header 上附带 Authorization 字段，设置生成的 JWT 来实现的。
+websocket 无法设置 header，但是可以设置 query，实现思路类似 restful 的认证设计。
+关于 ws 鉴权的过期、续期、权限等问题，和 restful 保持一致即可。

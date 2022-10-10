@@ -1,0 +1,59 @@
+- 下载 git for mac
+  https://git-scm.com/download/mac
+  选择 binary install
+
+终端输入 which git
+可查看安装位置
+
+- gitbash 配置
+  打开 vscode
+  文件->首选项->设置，打开设置
+  搜索 shell，找到 osx setting
+  点击在 setting.json 中编辑
+  {
+  "Git Bash": {
+  "path": "git 安装其中"
+  }
+  }！
+
+- 编辑器配置
+
+settings/code action on save/edit settings.json
+{
+"editor.suggestSelection": "first",
+"editor.quickSuggestions": {
+"strings": true
+},
+"editor.wordWrap": "on",
+"terminal.integrated.tabs.enabled": true,
+"explorer.confirmDelete": false,
+"editor.fontSize": 18,
+"editor.formatOnSave": true,
+"editor.fontWeight": 450,
+"editor.lineNumbers": "interval",
+"editor.tabSize": 2,
+"editor.lineHeight": 30,
+"editor.detectIndentation": false,
+"editor.cursorSmoothCaretAnimation": true,
+"editor.fontLigatures": true,
+"editor.fontFamily": "Fira Code Retina, Monaco, Consolas, 'Courier New', monospace",
+"files.autoSave": "afterDelay",
+"editor.codeActionsOnSave": {
+"source.fixAll": true
+},
+"eslint.alwaysShowStatus": true,
+"eslint.workingDirectories": [],
+"diffEditor.ignoreTrimWhitespace": false,
+"javascript.updateImportsOnFileMove.enabled": "always",
+"workbench.iconTheme": "material-icon-theme",
+"workbench.colorTheme": "One Dark Pro",
+"terminal.integrated.defaultProfile.windows": "Git Bash",
+"prettier.printWidth": 150,
+"prettier.jsxSingleQuote": true,
+"prettier.bracketSpacing": true,
+"prettier.singleQuote": true,
+"prettier.arrowParens": "always",
+"[javascript]": {
+"editor.defaultFormatter": "esbenp.prettier-vscode"
+}
+}

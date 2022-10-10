@@ -1,0 +1,307 @@
+<template>
+  <div class="picker-cycle">
+    <div
+      ref="pickerBox"
+      class="picker"
+      @touchstart.stop="moveStart"
+      @touchmove.stop="onMove"
+      @touchend="moveEnd"
+      @touchcancel="moveEnd"
+    >
+      <ul
+        class="picker-bar"
+        :style="{
+          width: width + 'px',
+          transform: 'translateX(' + transX + 'px)'
+        }"
+      >
+        <li
+          v-for="(item, index) in pickerItems"
+          :key="'kedu' + index"
+          :style="{
+            width: itemW + 'px'
+          }"
+          :class="bigItemIndex === index ? 'active' : 'normal'"
+        >
+          <label>{{ item.num }}</label>{{ suffix}}
+        </li>
+      </ul>
+    </div>
+    <p class="scales">
+      <span
+        class="scale-item"
+        v-for="item in 5"
+        :key="'scale' + item"
+        :class="{ active: item === 3 }"
+      >
+      </span>
+    </p >
+    <p class="line caui-line"></p >
+    <p class="picker-title">{{ title }}</p >
+  </div>
+</template>
+<script>
+export default {
+  name: "pickerCycle",
+  props: {
+    title: {
+      type: String,
+      default: ""
+    },
+    num: {
+      type: Number,
+      default: 0
+    },
+    max: {
+      type: Number,
+      default: 0
+    },
+    min: {
+      type: Number,
+      default: 0
+    },
+    gap: { // gap 刻度之间间隙，默认1刻度
+      type: Number,
+      default: 1
+    },
+    suffix: {
+      // 后缀
+      type: String,
+      default: ""
+    }
+  },
+  data() {
+    return {
+      curNum: this.num,
+      disNum: 1,
+      width: 0,
+      transX: 0,
+      itemW: 55,
+      // 用于渲染
+      pickerItems: [],
+      // 用于组件外传值变化，快速定位到当前值
+      toPosItem: {},
+      // 当前项大字显示
+      bigItemIndex: 2,
+      //  鼠标或手放下那一刻的点击点/ 按下的时间 /滑动距离/原始transX
+      startEPointX: 0,
+      startEPointTime: 0,
+      moveEPointDis: 0,
+      lastTransX: 0,
+      // 用于惯性
+      timer: null
+    };
+  },
+  mounted() {
+    // 保证铺满屏幕要5格，需要填充最大值
+    this.disNum = (this.max - this.min) / this.gap;
+    if (this.disNum < 4) {
+      this.max = this.max + (4 - this.disNum) * this.gap;
+    }
+    this.$nextTick(() => {
+      const oPickerW = this.$refs.pickerBox.offsetWidth;
+      // 只显示5格
+      this.itemW = Math.round(oPickerW / 5);
+      this.transX = -(this.itemW / 2);
+      this.pickerItems = [];
+      this.toPosItem = {};
+      this.initPicker(this.itemW);
+    });
+  },
+  watch: {
+    // 监听外部变值
+    num(v) {
+      // 防止内部变了，传给父组件，又响应过来
+      if (this.curNum === this.num) {
+        return;
+      }
+      this.curNum = v;
+      if (!this.toPosItem[v]) {
+        this.$toast({ msg: "没有该刻度", duration: 1000, position: "center" });
+        return;
+      }
+      this.transX = this.toPosItem[v].left;
+    },
+    transX(v) {
+      // 为了循环滚动
+      const l = -(this.itemW / 2);
+      const pickerItemLen = this.pickerItems.length;
+      if (!pickerItemLen) return;
+      const r = this.pickerItems[pickerItemLen - 5].left;
+      // 3 4 5 6 7 1 2 3 4 5 6 7 1 2 3 4 5
+      if (Math.round(v) >= l) {
+        // console.log('到最左边拉', this.transX)
+        // 当拉到最左边的时候，是后5位数字，定到正常序列的后5位,那就要除右边5位，所以减10
+        this.transX = this.pickerItems[pickerItemLen - 10].left;
+      }
+      if (Math.round(v) <= r - l) {
+        // console.log('到最右边拉', this.transX)
+        // 当拉到最右边，同理
+        this.transX = this.pickerItems[5].left;
+      }
+      // 为了当前值变大
+      this.changeBigIndex(this.transX);
+    }
+  },
+  methods: {
+    initPicker(itemW) {
+      //  为了左右循环滚动，在数组前后加上能铺满5格的数据
+      // 如7个数据，就这样  3 4 5 6 7 1 2 3 4 5 6 7 1 2 3 4 5
+      for (let i = -5; i <= this.disNum + 5; i++) {
+        let n = i;
+        if (i < 0) {
+          n = this.max + (i + 1) * this.gap;
+        } else if (i >= 0 && i <= this.disNum) {
+          n = this.min + i * this.gap;
+        } else {
+          n = this.min + (i - this.disNum - 1) * this.gap;
+        }
+        // 因为数字是居中一个格子中，所以 整个条x轴要向左半个格子距离
+        const left = Math.round(-(i + 5) * itemW);
+        const index = i + 5;
+        const item = {
+          num: n,
+          left,
+          index
+        };
+        if (i >= 0 && i <= this.disNum) {
+          this.toPosItem[n] = {
+            left: Math.round(-(i + 3) * itemW),
+            index
+          };
+        }
+        this.pickerItems.push(item);
+      }
+      this.width = this.pickerItems.length * itemW;
+      // 通过当前值得到当前位置，当前值在中间，所以要用往前两格的left
+      this.transX = this.toPosItem[this.curNum].left;
+      // 该项 突出显示
+      this.bigItemIndex = this.toPosItem[this.curNum].index;
+    },
+    moveStart(e) {
+      clearInterval(this.timer);
+      this.timer = null;
+      this.startEPointX = e.touches[0].clientX;
+      this.lastTransX = this.transX;
+      this.startEPointTime = new Date().getTime();
+    },
+    onMove(e) {
+      // 滑动过程中，滑动了多少距离，此时对应滑动
+      this.moveEPointDis = e.touches[0].clientX - this.startEPointX;
+      this.transX = this.lastTransX + this.moveEPointDis;
+    },
+    moveEnd(e) {
+      // 通过滑动距离和滑动时间，设置阻尼速度
+      const endPointTime = new Date().getTime();
+      let speed = this.moveEPointDis * 10 / (endPointTime - this.startEPointTime);
+      // console.log('停下', speed)
+      this.timer = setInterval(() => {
+        // 阻尼减少 逐渐到0
+        speed *= 0.95;
+        this.transX += speed;
+        if (Math.abs(Math.round(speed)) === 0) {
+          clearInterval(this.timer);
+          this.timer = null;
+          this.getCurScale(this.transX);
+        }
+      });
+      // 松手的那一刻，得置到刻度上
+    },
+    getCurScale(x) {
+      // 找到最接近的left值
+      for (let item of this.pickerItems) {
+        const dis = x - item.left;
+        if (Math.abs(dis) <= this.itemW / 2) {
+          this.transX = item.left;
+          this.curNum = this.pickerItems[item.index + 2].num;
+          this.$emit("change", this.curNum);
+        }
+      }
+    },
+    // 要实时识别滚动到哪项，哪项就突出显示，这是一件非常耗性能的事情
+    changeBigIndex(x) {
+      // 找到最接近的left值
+      for (let item of this.pickerItems) {
+        const dis = x - item.left;
+        if (Math.abs(dis) <= this.itemW / 2) {
+          this.bigItemIndex = item.index + 2;
+        }
+      }
+    }
+  }
+};
+</script>
+<style scoped lang="scss">
+.picker-cycle {
+  box-sizing: border-box;
+  width: 300px;
+  padding: 0 10px;
+  overflow: hidden;
+  .picker {
+    width: 280px;
+    overflow: hidden;
+    .picker-bar {
+      li {
+        float: left;
+        display: block;
+        text-align: center;
+        line-height: 30px;
+        white-space: nowrap;
+        font-size: 14px;
+        @extend .caui-text-primary;
+        &.active {
+          > label {
+            font-size: 28px;
+            color: #000;
+            font-width: 500;
+          }
+        }
+        &.normal {
+          opacity: .8;
+        }
+      }
+    }
+  }
+  .caui-line {
+    width: 280px;
+    height: 1px;
+  }
+  .scales {
+    width: 280px;
+    height: 16px;
+    .scale-item {
+      display: inline-block;
+      width: 1px;
+      height: 11px;
+      border-radius: 300% 300% 0 0;
+      @extend .caui-line;
+      &.active {
+        height: 16px;
+        @extend .caui-bg-auxiliary;
+      }
+      &:nth-child(1) {
+        margin-left: 28px;
+      }
+      &:nth-child(2) {
+        margin-left: 55px;
+      }
+      &:nth-child(3) {
+        margin-left: 55px;
+      }
+      &:nth-child(4) {
+        margin-left: 55px;
+      }
+      &:nth-child(5) {
+        margin-left: 55px;
+      }
+    }
+  }
+  .picker-title {
+    height: 22px;
+    line-height: 22px;
+    text-align: center;
+    margin-top: $padding-md;
+    @extend .caui-text-desc;
+  }
+}
+</style>

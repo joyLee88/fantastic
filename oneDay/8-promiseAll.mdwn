@@ -1,0 +1,13 @@
+promise.all 一旦有个出错，会导致阻断，那怎么实现出错的返回信息，其他能继续获取返回值呢
+```js
+const arr = [promise0, promise1];
+Promise.all(
+  arr.map((p) => p.catch((e) => {
+    console.log(`pe=${e}`);
+  }))
+).then((arr) => {
+  for (let i = 0; i < arr.length; i++) {
+    console.log("1111", arr[i]);
+  }
+})
+```

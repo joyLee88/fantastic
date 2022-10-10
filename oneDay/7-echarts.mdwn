@@ -1,0 +1,477 @@
+1. 画个表盘
+```js
+const chartDom = document.querySelector(".score-dom");
+const myChart = this.$echarts.init(chartDom);
+// 因为刻度表和设计不一样，用了3层表盘来模拟实现
+// 因为数字不是数字的时候，要显示--，但是echart不是数字的时候，显示NaN
+// 所以我用一个内表盘的title来显示--
+const numDetail = {
+    show: true,
+    valueAnimation: true,
+    fontSize: 60,
+    offsetCenter: [0, "20%"]
+};
+const noNumDetail = {
+    show: false,
+    fontSize: 60,
+    fontWeight: 100,
+    color: "#ccc",
+    offsetCenter: [0, "20%"]
+};
+if (this.scoreData === "- -") {
+    numDetail.show = false;
+    noNumDetail.show = true;
+}
+const option = {
+series: [
+    {
+    type: "gauge",
+    min: 0,
+    max: 100,
+    splitNumber: 9,
+    startAngle: 210,
+    endAngle: -30,
+    radius: "100%",
+    // 进度条颜色
+    itemStyle: {
+        color: {
+            x: 0,
+            y: 1,
+            x2: 0,
+            y2: 0,
+            colorStops: [
+                {
+                offset: 1,
+                color: "#1eaed6"
+                }
+            ]
+        }
+    },
+    progress: {
+        show: true,
+        roundCap: true,
+        width: 14,
+        overlap: true
+    },
+    axisLine: {
+        roundCap: true,
+        lineStyle: {
+        width: 14
+        }
+    },
+    splitLine: {
+        show: false
+    },
+    axisTick: {
+        show: false
+    },
+    axisLabel: {
+        show: false
+    },
+    anchor: {
+        show: false
+    },
+    pointer: {
+        show: false
+    },
+    detail: numDetail,
+    title: {
+        fontSize: 12,
+        color: "#919294",
+        offsetCenter: [0, "-30%"]
+    },
+        data: [
+        {
+        value: this.scoreData,
+        name: "您的驾驶分数"
+        }
+    ]
+    },
+    {
+    // 内表盘
+        type: "gauge",
+        min: 0,
+        max: 100,
+        radius: "78%",
+        splitNumber: 7,
+        startAngle: 190,
+        endAngle: -10,
+        axisLine: {
+            lineStyle: {
+            color: [[1, "#dce1e5"]],
+            width: 2
+            }
+        },
+        splitLine: {
+            distance: 0,
+            length: 8,
+            lineStyle: {
+            width: 2,
+            color: "#ccc"
+            }
+        },
+        axisTick: {
+            distance: 0,
+            splitNumber: 3, // 分钟刻度个数
+            length: 5,
+            lineStyle: {
+            color: "#ccc"
+            }
+        },
+        axisLabel: {
+            show: false
+        },
+        anchor: {
+            show: false
+        },
+        pointer: {
+            show: false
+        },
+        title: noNumDetail,
+        detail: {
+            show: false
+        },
+        data: [
+            {
+            name: "--"
+            }
+        ]
+    },
+    {
+        // 内表盘
+        type: "gauge",
+        min: 0,
+        max: 100,
+        radius: "78%",
+        splitNumber: 9,
+        startAngle: 210,
+        endAngle: -30,
+        axisLine: {
+            lineStyle: {
+            color: [[1, "#dce1e5"]],
+            width: 2
+            }
+        },
+        splitLine: {
+            show: false
+        },
+        axisTick: {
+            show: false
+        },
+        axisLabel: {
+            show: false
+        },
+        anchor: {
+            show: false
+        }
+    }]
+};
+option && myChart.setOption(option);
+
+```
+
+渐变色：
+```js
+option = {
+    series: [{
+        type: 'gauge',
+        min: 0,
+        max: 100,
+        splitNumber: 10,
+        radius: '100%',
+        // 进度条颜色
+        itemStyle: {
+            color: {
+                x: 0,
+                y: 1,
+                x2: 0,
+                y2: 0,
+                colorStops: [{
+                    offset:0, color:'red'
+                }, {
+                    offset:1, color:'blue'
+                }]
+            }
+        },
+        progress: {
+            show: true,
+            roundCap: true,
+            width: 30,
+            overlap: true
+        },
+        axisLine: {
+           roundCap: true,
+            lineStyle: {
+                width: 30,
+                // 表盘条颜色
+                color: [
+                    [1, new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                        {
+                          offset: 0.1,
+                          color: "#ffc600"
+                        },
+                        {
+                          offset: 0.6,
+                          color: "#08aaea"
+                        },
+                        {
+                          offset: 1,
+                          color: "#000550"
+                        }
+                      ])]]
+            }
+        },
+        splitLine: {
+            show: false
+        },
+        axisTick: {
+            show: false
+        },
+        axisLabel: {
+            show: false
+        },
+        anchor: {
+            show: false
+        },
+        pointer: {
+            show: false
+        },
+        detail: {
+            valueAnimation: true,
+            fontSize: 80,
+            offsetCenter: [0, '0%']
+        },
+        title: {
+            offsetCenter: [0, '-20%']
+        },
+        data: [{
+            value: 58.46,
+            name: '您的驾驶分数'
+        }]
+        },
+    {
+        // 内表盘
+        type: 'gauge',
+        min: 0,
+        max: 100,
+        radius: '90%',
+        splitNumber: 10,
+        axisLine: {
+            lineStyle: {
+                color: [
+                    [2, '#eee']
+                ],
+                width: 2
+            }
+        },
+        splitLine: {
+            distance: 0,
+            length: 10,
+            lineStyle: {
+                color: '#eee'
+            }
+        },
+        axisTick: {
+            distance: 0,
+            splitNumber: 3, // 分钟刻度个数
+            length: 6,
+            lineStyle: {
+                color: '#eee'
+            }
+        },
+        axisLabel: {
+            show: false
+        },
+        anchor: {
+            show: false,
+            size: 14,
+            itemStyle: {
+                color: '#000'
+            }
+        }
+
+    }
+    ]
+};
+
+// other
+const option = {
+        gradientColor: ["#f00", "#0f0", "00f"],
+        series: [
+          {
+            type: "gauge",
+            itemStyle: {
+              color: {
+                x: 0,
+                y: 1,
+                x2: 0,
+                y2: 0,
+                colorStops: [
+                  {
+                    offset: 0,
+                    color: "red"
+                  },
+                  {
+                    offset: 1,
+                    color: "blue"
+                  }
+                ]
+              }
+            },
+            progress:{
+                show: true,
+              width: 12,
+              lineStyle: {
+                width: 12,
+                color: [[1, linearGradient]]
+              }
+            },
+            axisLine: {
+              roundCap: true,
+              lineStyle: {
+                width: 12,
+                color: "#888"
+              }
+            },
+            axisTick: {
+              show: false
+            },
+            splitLine: {
+              length: 15,
+              lineStyle: {
+                width: 2,
+                color: "#999"
+              }
+            },
+            axisLabel: {
+              distance: 25,
+              color: "#999",
+              fontSize: 20
+            },
+            anchor: {
+                show: false
+            },
+            pointer: {
+              show: false
+            },
+            title: {
+              show: false
+            },
+            detail: {
+              valueAnimation: true,
+              fontSize: 80
+            },
+            data: [
+              {
+                value: 70
+              }
+            ]
+          }
+        ]
+      };
+
+
+
+
+```
+
+2. 折柱图
+```js
+    option = {
+        tooltip: { // 点击某个坐标弹出框
+          trigger: "axis",
+          axisPointer: {
+            type: "shadow"
+          },
+          confine: true, // 内容过长的时候自适应
+          extraCssText: "white-space:normal;word-break:break-all;"
+        },
+        grid: [ // 上下左右的padding
+          {
+            top: 36,
+            bottom: 70
+          }
+        ],
+        legend: { // 哪些指标
+          data: ["里程(km)", "排名(%)"],
+          bottom: 0
+        },
+        xAxis: { // X轴
+          type: "category",
+          data: []
+        },
+        yAxis: [
+          {
+            type: "value",
+            // name: "里程",
+            min: 0,
+            interval: 250,
+            axisLabel: {
+              formatter: "{value}"
+            }
+          },
+          {
+            type: "value",
+            // name: "排名",
+            min: 0,
+            max: 100,
+            interval: 25,
+            axisLabel: {
+              formatter: "{value}"
+            }
+          }
+        ],
+        series: [
+        {
+            name: "里程(km)",
+            type: "bar",
+            data: [],
+            tooltip: {
+              valueFormatter: function (value) {
+                return value + "km";
+              }
+            },
+            barWidth: 12, // 柱形宽度
+            itemStyle: { // 柱形颜色及圆角
+              color: "#3584c8",
+              barBorderRadius: [4, 4, 0, 0]
+            }
+          },
+          {
+            name: "排名(%)",
+            type: "line",
+            yAxisIndex: 1,
+            data: [],
+            tooltip: {
+              valueFormatter: function (value) {
+                return value + "%";
+                   }
+            },
+            showSymbol: false,
+            itemStyle: {
+              color: "#3584c8"
+            },
+            lineStyle: {
+              color: {
+                type: "linear",
+                x: 0,
+                y: 0,
+                x2: 1,
+                y2: 1,
+                colorStops: [
+                  {
+                    offset: 0,
+                    color: "#2574a9"
+                  },
+                  {
+                    offset: 1,
+                    color: "#1ed6d4"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+```
+

@@ -1,0 +1,30 @@
+密钥提示过期
+1. cmd
+ssh-keygen -t rsa -C "这里换上你的邮箱"
+cd ~/.ssh (公钥和私钥)
+
+cat id_rsa.pub
+  复制其内容
+2. github-settings-settings-sshandGPGkeys
+粘贴
+
+3. 输入命令测试: ssh -T git@github.com
+
+
+git config --global user.name "joyLee"
+
+因为远端不能用密码登入了，只能token，所以采用以下方式
+http://events.jianshu.io/p/f94ab86d49c8
+
+1. 在 github 上找到setting -> Developer settings ->Personal access tokens->Generate new token
+
+注意这里需要保存好token，因为只显示一次。
+
+*   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
+
+2. 设置token，这里分成两种情况，代码已经有的，远程仓库地址添加token；没有代码的，在git clone添加token
+
+3. 还有种方式，是改凭据管理，在mac种叫钥匙串访问
+
+
+还是拉不下来代码  仓库地址http改成git

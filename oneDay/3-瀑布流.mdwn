@@ -1,0 +1,94 @@
+瀑布流最初是等宽不等高的卡片，根据元素的实际宽高js计算出自己的位置。
+
+```js
+// 计算每个卡片的坐标
+export function calcPositions({ columns = 2, gap = 7, elements }) {
+  if (!elements || !elements.length) {
+    return [];
+  }
+  const y = []; //上一行卡片的底部纵坐标数组，用于找到新卡片填充位置
+  const positions = []; // 每个卡片的坐标数组 left top
+  elements.forEach((item, index) => {
+    if (y.length < columns) { // 还未填满一行
+      y.push(item.offsetHeight);
+      positions.push({
+        left: (index % columns) * (item.offsetWidth + gap),
+        top: 0
+      });
+    } else {
+      const min = Math.min(...y); // 最小纵坐标
+      const idx = y.indexOf(min); // 纵坐标最小的卡片索引
+      y.splice(idx, 1, min + gap + item.offsetHeight); // 替换成新卡片的纵坐标
+      positions.push({
+        left: idx * (item.offsetWidth + gap),
+        top: min + gap
+      });
+    }
+  });
+// 由于采用绝对定位，容器是无法自动撑开的。因此需要计算实际高度，即最后一个卡片的top加上自身高度
+  return { positions, containerHeight: positions[positions.length - 1].top + elements[elements.length - 1].offsetHeight };
+}
+
+```
+封装成瀑布流组件：
+```js
+<template>
+  <div class="masonry-lite">
+    <slot></slot>
+  </div>
+</template>
+<script>
+import { calcPositions } from './index.js';
+export default {
+  name: 'MasonryLite',
+  props: {
+    gap: {
+      type: Number,
+      default: 12,
+    },
+    columns: {
+      type: Number,
+      default: 2,
+    },
+  },
+  data() {
+    return {};
+  },
+  mounted() {
+    this.doLayout();
+  },
+  methods: {
+    doLayout() {
+      const children = [...this.$el.querySelectorAll('.masonry-item')];
+      if (children.length === 0) {
+        return;
+      }
+      const { positions, containerHeight } = calcPositions({
+        elements: children,
+        columns: this.columns,
+        gap: this.gap,
+      });
+      children.forEach((item, index) => {
+        item.style.cssText = `left:${positions[index].left}px;top:${positions[index].top}px;`;
+      });
+      this.$el.style.height = `${containerHeight}px`;
+    },
+  },
+};
+</script>
+<style lang="scss" scoped>
+.masonry-lite{
+  position: relative;
+}
+.masonry-item {
+  position: absolute;
+}
+</style>
+```
+使用：
+<MasonryLite>
+  <div class="product-card masonry-item" v-v-for="(item, index) in items" :key="index">
+    <img :src="item.imageUrl" />
+    <header>{{ item.title }}</header>
+  </div>
+</MasonryLite>
