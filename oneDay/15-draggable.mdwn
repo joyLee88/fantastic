@@ -1,0 +1,21 @@
+import draggable from "vuedraggable";
+<draggable v-model="showList" tag="div" @start="start" @end="end" :delay="1" :fallbackToLerance="3">
+<transition-group name="showList" tag="div">
+<div v-for="item in showList" :key="item.iconClass" class="control-item" @touchmove.stop.prevent>
+<i :class="['caiconfont', item.iconClass]"></i>
+<span>{{ item.label }}</span>
+</div>
+</transition-group>
+</draggable>
+start() {
+this.copyList = this.showList.slice(0);
+},
+end(ev) {
+const { oldIndex, newIndex } = ev;
+const item = this.copyList[oldIndex];
+this.copyList.splice(oldIndex, 1, this.copyList[newIndex]);
+this.copyList.splice(newIndex, 1, item);
+console.log(this.copyList);
+this.showList = this.copyList;
+},
+拖拽被页面的滚动影响了，说明冒泡了，拖动是对每一个子项，所以对子项进行阻止冒泡

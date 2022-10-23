@@ -1,0 +1,15 @@
+内容高度是动态不确定的，要做收起和展开需要做高度变化的动画效果。
+但是使用height属性做，最高的时候height：auto；动画效果只会瞬间变化，没法做到滑动效果。
+
+max-height替代height就可以实现
+slide-to-pack {
+    max-height: 60px;
+    transition: max-height 1s;
+    -webkit-transition: max-height 1s;
+  }
+  .slide-to-unpack {
+    // height: auto;
+    max-height: 300px;
+    transition: max-height 1s;
+    -webkit-transition: max-height 1s;
+  }
