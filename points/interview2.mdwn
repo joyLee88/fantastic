@@ -1,0 +1,419 @@
+1. 请先做一下自我介绍
+2. es6 的解构赋值-数组、对象
+   ES6 允许按照一定模式，从数组和对象中提取值，对变量进行赋值，这被称为解构
+   数组中的值会自动被解析到对应接收该值的变量中，数组的解构赋值要一一对应 如果有对应不上的就是 undefined
+   对象的解构与数组有一个重要的不同。数组的元素是按次序排列的，变量的取值由它的位置决定；而对象的属性没有次序，变量必须与属性同名，才能取到正确的值。
+
+3. 请介绍一下原型和原型链(es6class 和 es5 继承)
+
+# 原型
+
+内置属性**proto** ，指向创建它的构造函数的原型对象
+对象之间通过**proto**连接起来的对象链， 当前对象找不到该属性，往上找，直到 null。
+任何对象都具有隐式原型属性（**proto**），只有函数对象有显式原型属性（prototype）
+
+    * 原型：
+    原型就是具有公共属性和方法的对象。
+    原型的作用（1）数据共享，节省内存空间
+    			其实就是为类(函数)提供了一个【公共区域】，在这个公共区域中声明的属性和方法能够被所有通过这个类所创建的对象所访问到。减少内存消耗。
+    			（2）为了实现继承
+
+    当我们使用new 关键字实例化一个类生成一个对象，这个对象内部有个指针指向构造函数的 prototype 属性对应的值，这个指针被称为原型。
+    	每个对象都有原型，除了null和undefined
+    * 原型链：当我们访问一个对象的属性时，如果对象内部不存在这个属性，那么就会去它的原型对象上找这个属性，该原型对象又会有自己的原型，这种寻找的方式，看起来就像是链子一样，这便是原型链。
+
+对象 obj 原型的获取方法有：obj.**proto** 、obj.constructor.prototype、Object.getPrototypeOf(obj)
+
+# 面向对象
+
+js 的面向对象衍生方式 简单对象返回-》 构造函数 -》 prototype
+
+# 继承
+
+父类.call(this) // Parent.apply(this, arguments)
+子类.prototype = Object.create(父类.prototype);
+子类.constructor = 子类 (构造函数指向自己)
+
+extends 指定继承的父类
+Extends super 类似 call 执行父类构造函数
+
+js 在 ES6 前一般称为伪继承，主要有四种方式
+原型链继承：无法向父类构造函数传参
+构造函数继承：无法实现函数的复用
+组合继承：使用原型继承继承父类的属性 Parent.call(this)，使用构造函数继承父类的方法 new Parent()。但子类调用了两次父类构造函数，生成了两个父类实例
+function Son(age) {
+Father.call(this, age)
+}
+​
+Son.prototype = new Father()
+let son = new Son(12)
+寄生组合继承 （常用）
+
+# new 关键字
+
+新生一个对象——其**proto 指向构造函数的原型——构造函数作用域赋给新对象，绑定 this——为新对象添加属性，执行构造函数——返回对象
+Var obj = {};
+Obj.**proto\_\_ = Person.prototype;
+Person.call(obj);
+Return obj;
+
+# 如何判断一个对象是否空对象
+
+(1) ES6 的 Object.keys()
+Object.keys(o).length == 0
+(2) Object.getOwnPropertyNames(o).length == 0
+(3) JSON.stringify(o) == "{}"
+(4) jquery 的$.isEmptyObject(o)
+
+4. instanceof 原理
+
+# o instanceof X
+
+检测实例 o 的原型是否该构造函数 X 的 prototype
+function newInstanceOf(left, right) {
+    let rightProto = right.prototype;
+    let leftP = left.**proto**;
+    while(true) {
+        if (leftP === null) return false;
+        if (leftP === rightProto) return true;
+        leftP = leftP.**proto**;
+    }
+}
+
+5. 什么是闭包，有什么用?平时有用过吗?能举
+   例说明吗?
+   能够读取其他函数内部变量的函数。只有函数内部的子函数才能读取局部变量，所以闭包可以理解成“定义在一个函数内部的函数“。在本质上，闭包是将函数内部和函数外部连接起来的桥梁。
+
+其实就是将作用域链延伸，不释放能够使用。
+
+6. apply call bind 的区别，能说下实现思路吗?
+   call()、apply()、bind() 都是用来重定义 this 这个对象的，将原来的上下文 this 完全替代，改变方法的上下文！
+   obj.myFun.call(o);　
+   注意：bind 返回的是一个新函数，必须调用自执行
+   obj.myFun.bind(o)();
+
+- apply 方法接收两个参数：一个是 this 绑定的对象，一个是参数数组。
+- call 方法接收的参数，第一个是 this 绑定的对象，后面的其余参数是传入函数执行的参数。也就是说，在使用 call() 方法时，传递给函数的参数必须逐个列举出来。
+- bind 方法通过传入一个对象，返回一个 this 绑定了传入对象的新函数。这个函数的 this 指向除了使用 new 时会被改变，其他情况下都不会改变，传入参数类似 call，逐个列举！
+
+7. 大致阐述一下浏览器事件循环机制 eventloop(js 运行机制、宏任务、微任务)
+   javaScript  语言的执行环境是单线程的，一次只能执行一个任务，多任务需要排队等候，而且定时器、网页请求、等待鼠标点击等，这种模式可能会阻塞代码，导致代码执行效率低下。为了避免这个问题，出现了异步编程。一般是通过  callback  回调函数、事件发布/订阅、Promise  等来组织代码，本质都是通过回调函数来实现异步代码的存放与执行。只有一个主线程来处理所有的任务，非阻塞靠的就是 event loop（事件循环）。
+
+Js 是单线程语言，本质是通过回调函数模拟异步操作。要实现非阻塞，通过事件循环机制。
+js 任务分为：同步任务、异步任务。同步任务依次进入执行栈，异步任务会放入消息队列。
+异步任务：宏任务队列和微任务队列
+
+事件循环机制分三部分：主线程、宏任务队列、微任务队列
+宏任务：整体代码、setTimeout、setInterval、I/O 操作
+微任务：new Promise().then（前提是 promise 中 resolve 执行了）、MutationObserver(前端回溯)、nextTick
+为什么要区分宏微？
+宏任务队列保证先进先出执行；但是某些任务优先级比较高，需要通过微任务来调节。
+
+    具体循环机制：
+    	先执行主线程，执行同步任务即宏任务整体script（遇到异步宏任务放宏任务、遇到微任务放微任务）——执行微任务
+    	开始一轮：宏任务（创建并添加微任务）——执行微任务——UI render——下一轮
+
+8. 简述防抖和节流的原理
+   防抖是频繁触发的情况下，只有足够的空闲时间才执行代码一次。
+   节流是指一定时间内 js 方法只执行一次。
+
+- 防抖需要一个延时器来辅助实现，延迟执行需要执行的代码，如果方法多次触发，把上次记录的延迟执行代码用 clearTimeout 清除，重新开始计时，如果计时完毕则执行代码。
+- 节流是声明一个变量当标志位，记录当前代码是否执行，如果正在执行，取消这次方法执行直接返回，如果空闲则正常触发方法执行。
+
+# 防抖
+
+    持续触发一个事件，在一定时间内不触发，使用最后一次
+    防止函数多次调用，使用最后一次调用
+
+    常用于input输入，频繁关键词输入，请求频次会太多，会在保证停止输入1s后再去请求
+
+    // 防抖
+    function debounce(fn, wait) {    
+    	var timeout = null;    
+    	return function() {        
+    		if(timeout !== null)   clearTimeout(timeout);        
+    		timeout = setTimeout(fn, wait);    
+    	}
+    }
+    // 处理函数
+    function handle() {    
+    	console.log(Math.random());
+    }
+    // 滚动事件
+    window.addEventListener('scroll', debounce(handle, 1000));
+
+# 节流
+
+    持续触发一个事件，每固定时间触发一次，平滑响应
+    防止函数多次调用，定时触发函数
+
+    常用于resize、scroll事件，是一定要执行的
+
+    function throttle(fn, interval) {
+    	let last = 0;
+    	return function() {
+    		let now = Date.now();
+    		if (now - last >= interval) {
+    			last = now;
+    			fn.apply(this, arguments);
+    		}
+    	}
+    }
+    时间戳写法会造成第一次立即执行
+
+    改为定时器写法，但是最后一次会延时执行
+    function throttle(fn, interval) {
+    	let timer = null;
+    	return funtion() {
+    		let context = this;
+    		let args = arguments;
+    		if(!timer) {
+    			timer = setTimeout(function() {
+    				fn.apply(context, args);
+    				timer = null;
+    			}, interval)
+    		}
+    	}
+    }
+
+    结合写法
+    function throttle (fn, delay) {
+    	let timer = null;
+    	let startTime = Date.now();
+    	reurn function() {
+    		let curTime = Date.now();
+    		let leftTime = delay - (curTime - startTime);
+    		let context = this;
+    		let args = arguments;
+    		clearTimeout(timer);
+    		if (leftTime <= 0) { // 保证最后一次立即执行
+    			fn.apply(context, args);
+    			startTime = Date.now();
+    		} else { // 说明时间间隔短，定时后执行
+    			timer = setTimeout(fn, leftTime)
+    		}
+    	}
+    }
+
+css 部分
+
+1.  阐述-下盒子模刑
+    width padding border margin
+
+        IE怪异模式
+        content包括width、padding、border
+
+        box-sizing: content-box / border-box(IE)
+
+2.  什么是 BFC?BFC 有什么作用?什么情况下会触发 BFC?
+    块级格式化上下文,是一个独立的渲染区域，只有 Block-level box 参与， 它规定了内部的 Block-level Box 如何布局，不影响外部区域。
+
+BFC 就是页面上的一个隔离的独立容器，容器里面的子元素不会影响到外面的元素。
+
+如何触发创建 BFC
+float 的值不是 none。
+position 的值不是 static 或者 relative。
+display 的值是 inline-block、table-cell、flex、table-caption 或者 inline-flex
+overflow 的值不是 visible
+
+3. 怎样处理 移动端 1px 被 渲染成 2px 问题？
+   局部处理
+   meta 标签中的 viewport 属性 ，initial-scale 设置为 1
+   rem 按照设计稿标准走，外加利用 transfrome 的 scale(0.5) 缩小一倍即可；
+   全局处理
+   mate 标签中的 viewport 属性 ，initial-scale 设置为 0.5
+   rem 按照设计稿标准走即可
+
+vue 部分
+
+1. 为什么 vue2 组件中的 data 是一个函数?
+
+- 根实例对象 data 可以是对象也可以是函数（根实例是单例），不会产生数据污染情况
+
+- 组件实例对象 data 必须为函数，目的是为了防止多个组件实例对象之间共用一个 data，产生数据污染。采用函数的形式，initData 时会将其作为工厂函数都会返回全新 data 对象
+
+  一个组件实例相当于 new Vue 一份出来，data 是对象的话，相当于共用一份 data，用函数，每一个实例都是 return 一份新对象。
+
+2. vue2 的数据绑定原理(了解过 vue3 吗，能否阐述一下 vue3 数据绑定的实现方式?)
+   vue2 的双向数据绑定(又称响应式)原理，是通过数据劫持结合发布订阅模式的方式来实现的，通过 Object.defineProperty()来劫持各个属性的 setter，getter，在数据变动时发布消息给订阅者，触发相应的监听回调来渲染视图。也就是说数据和视图同步，数据发生变化，视图跟着变化，视图变化，数据也随之发生改变。
+
+# 那为什么 vue3 用 proxy API 替代 defineProperty 呢？
+
+Object.defineProperty() 方法会直接在一个对象上定义一个新属性，或者修改一个对象的现有属性，并返回此对象，通过这个定义 defineReactive 响应式方法；在对象存在多个 key 情况下，需要进行遍历；如果存在嵌套对象的情况，还需要在 defineReactive 中进行递归；当给 key 赋值为对象的时候，还需要在 set 属性中进行递归；
+但是，
+
+- 检测不到对象属性的添加和删除
+- 数组 API 方法无法监听到, 如 arr.push
+- 需要对每个属性进行遍历监听，如果嵌套对象，需要深层监听，造成性能问题
+
+Proxy 的监听是针对一个对象的，那么对这个对象的所有操作会进入监听操作，这就完全可以代理所有属性了；Proxy 直接可以劫持整个对象，并返回一个新对象，我们可以只操作新的对象达到响应式目的。Proxy 有多达 13 种拦截方法,不限于 apply、ownKeys、deleteProperty、has 等等，这是 Object.defineProperty 不具备的
+
+3. nextTick 实现原理
+   可以在 DOM 更新完毕之后执行一个回调。
+
+nextTick 用于下次 Dom 更新循环结束之后执行延迟回调，在修改数据之后使用 nextTick 用于下次 Dom 更新循环结束之后执行延迟回调，在修改数据之后使用 nextTick 用于下次 Dom 更新循环结束之后执行延迟回调，在修改数据之后使用 nextTick,则可以在回调中获取更新后的 DOM。
+
+4. 什么是虚拟 dom，他的大致实现原理是什么?
+   Virtual DOM 算法是有三个核心实现。
+   一是 用 JS 对象模拟 DOM 树，可以理解组合 VNode。
+   二是 diff 算法，比较新旧 VNode 的差异。
+   三是 打补丁 patch，将差异应用到真正的 DOM 树上。
+
+建立虚拟 DOM tree，通过 createDocumentFragment
+把 diff 结果表通过 DOM fragment 更新到浏览器 DOM 中
+
+Virtual DOM 算法主要是实现上面步骤的三个函数：element，diff，patch
+// 1. 构建虚拟 DOM
+var tree = el('div', {'id': 'container'}, [
+el('h1', {style: 'color: blue'}, ['simple virtal dom']),
+el('p', ['Hello, virtual-dom']),
+el('ul', [el('li')])
+])
+// 2. 通过虚拟 DOM 构建真正的 DOM
+var root = tree.render()
+document.body.appendChild(root)
+// 3. 生成新的虚拟 DOM
+var newTree = el('div', {'id': 'container'}, [
+el('h1', {style: 'color: red'}, ['simple virtal dom']),
+el('p', ['Hello, virtual-dom']),
+el('ul', [el('li'), el('li')])
+])
+// 4. 比较两棵虚拟 DOM 树的不同
+var patches = diff(tree, newTree)
+
+// 5. 在真正的 DOM 元素上应用变更
+patch(root, patches)
+
+5. hash 路由和 history 路由
+
+- hash 模式 ：使用 URL 的 hash 来模拟一个完整的 URL, 其显示的网络路径中会有 “#” 号
+  hash 虽然出现 URL 中，但不会被包含在 HTTP 请求中，对后端完全没有影响，因此改变 hash 后刷新, 也不会有问题
+
+  hash 模式示例: http://localhost:8080/#/home http://localhost:8080/#/user
+
+- history 模式： 美化后的 hash 模式，路径中不包含“#”。依赖于 Html5 的 history api
+  由于改变了地址, 刷新时会按照修改后的地址请求后端, 需要后端配置处理, 将地址访问做映射, 否则会 404,所以一刷新可能 404
+
+  history 模式示例: http://localhost:8080/home http://localhost:8080/user
+  参考: popState, pushState()
+
+- 改成 history 模式非常简单，只需要将路由的 mode 类型改成 history 即可。在 src/router/index.js 中
+  new Router({ mode: "history"})
+
+6. vuex 用过吗?讲一下具体使用流程，知道原理吗?(redux 流程、dva)
+vuex的组成部分：
+  state:是存储的基本数据。
+  mutations:提交更改数据。
+  getter:对state加工，和computed计算属性一样。
+  actions：处理异步，通过store.commit方法触发mutations中的方法，从而改变state值。
+  module：是store分割的模块，每个模块拥有自己的state、mutations、getters、actions。
+
+- vuex是针对vuejs的状态管理工具。vuex完美的结合了vue的响应式数据。
+- vue可以直接触发methods中的方法，vuex不行。为了处理异步，当你触发一个点击事件时，会通过dispatch来访问actions中的方法，actions中的commit会触发mutations中的方法从而修改state的值，通过getters来把数据反映到视图。
+- vuex通过Vue.use(vuex)，从而调用install方法，通过applyMixin(Vue)在任意组件执行this.$store都能访问到store对象，实现将store挂载注入到组件中。
+- vuex的state状态是响应式的，是借助vue的data是响应式，将state存入vue实例组件的data中。
+- vuex的getters则是借助于vue的计算属性computed实现数据的实时监听。
+
+7. vue-cli 的实现原理
+   Vue CLI 是一个基于 Vue.js 进行快速开发的完整系统，提供了终端命令行工具、零配置脚手架、插件体系、图形化管理界面等。
+
+8. 路由守卫
+路由守卫是路由在跳转前、后过程中的一些钩子函数，就是路由跳转的一些验证
+
+路由守卫总共有7个
+- 全局路由守卫:
+beforeEach 前置守卫
+affterEach 后置守卫
+beforeResolve 解析守卫
+- 路由的守卫（组件内部守卫）
+beforeRouterEnter 进入组件之前触发,在Created前面
+beforeRouterUpdated 路由更新但是内容不会改变
+beforeRouterLeave 离开之前触发,在beforeDestory之前触发
+```js
+ // 和data、created、mounted平级
+ beforeRouteEnter(to, from, next) {
+    // 在渲染该组件的对应路由被 confirm 前调用
+    // 不！能！获取组件实例 `this`，不能 访问 this，因为守卫在导航确认前被调用，因此即将登场的新组件还没被创建。
+完整的导航解析流程
+    // 因为当守卫执行前，组件实例还没被创建
+    if (sessionStorage.getItem("token")) {
+      next();
+    } else {
+      alert("请先登录");
+      next("/login");
+    }
+  },
+  beforeRouteUpdate(to, from, next) {
+    // 在当前路由改变，但是该组件被复用时调用
+    // 可以访问组件实例 `this`
+  },
+  beforeRouteLeave(to, from, next) {
+    // 导航离开该组件的对应路由时调用
+    // 可以访问组件实例 `this`
+  },
+```
+- 路由独享守卫（单个路由守卫）
+beforeEnter 读取路由的信息
+```js
+ // 首页模块路由
+  {
+    path: "/index",
+    name: "index",
+    meta: { permission: true },
+    component: () => import("../views/Index.vue"),
+    beforeEnter: function(to, from, next) {
+      if (sessionStorage.getItem("token")) {
+        next();
+      } else {
+        alert("请先登录");
+        next("/login");
+      }
+    }
+  },
+```
+
+所有路由守卫都是三个参数
+  to去哪儿 from从哪来  next要不要继续下一步
+
+9. ts 有了解过吗?(Pick 的实现)
+ts常用的内置工具类型（Record、Partial 、 Required 、 Readonly、 Pick 、 Exclude 、 Extract 、 Omit
+
+Pick 类型用于从T类型中选择部分属性K来构造新的类型
+主要的逻辑就是如何利用泛型和联合类型，来动态的从一个已知的类型中，提取出它的子集。
+
+Omit 与 Pick 作用相似，只不过 Omit 是：以一个类型为基础支持剔除某些属性，然后返回一个新类型。
+
+网络部分
+1.http 位于七层网络模型哪一层?(了解过 http2.0和 http3.0 吗?)
+
+2.https 的加密原理(对称加密算法和非对称加密算法)
+- 为什么需要加密？
+因为http的内容是明文传输的，明文数据会经过中间代理服务器、路由器、wifi热点、通信服务运营商等多个物理节点，如果信息在传输过程中被劫持，传输的内容就完全暴露了。劫持者还可以篡改传输的信息且不被双方察觉，这就是中间人攻击。所以我们才需要对信息进行加密。最容易理解的就是对称加密 
+- 对称加密
+简单说就是有一个密钥，它可以加密一段信息，也可以对加密后的信息进行解密，和我们日常生活中用的钥匙作用差不多。
+最大的问题就是这个密钥怎么让传输的双方知晓，同时不被别人知道。如果由服务器生成一个密钥并传输给浏览器，那在这个传输过程中密钥被别人劫持到手了怎么办？之后他就能用密钥解开双方传输的任何内容了，所以这么做当然不行。
+
+- 非对称加密
+简单说就是有两把密钥，通常一把叫做公钥、一把叫私钥，用公钥加密的内容必须用私钥才能解开，同样，私钥加密的内容只有公钥能解开。
+一组公钥私钥，可以保证单向保密；
+
+两组公钥私钥，是否就能保证双向传输都安全了？请看下面的过程：
+ * 某网站服务器拥有公钥A与对应的私钥A’；浏览器拥有公钥B与对应的私钥B’。
+ * 浏览器把公钥B明文传输给服务器。
+ * 服务器把公钥A明文给传输浏览器。
+ * 之后浏览器向服务器传输的内容都用公钥A加密，服务器收到后用私钥A’解密。由于只有服务器拥有私钥A’，所以能保证这条数据的安全。
+ * 同理，服务器向浏览器传输的内容都用公钥B加密，浏览器收到后用私钥B’解密。同上也可以保证这条数据的安全。
+
+- 非对称、对称结合
+既然非对称加密耗时，那非对称加密+对称加密结合可以吗？而且得尽量减少非对称加密的次数。当然是可以的，且非对称加密、解密各只需用一次即可。
+请看一下这个过程：
+ * 某网站拥有用于非对称加密的公钥A、私钥A’。
+ * 浏览器向网站服务器请求，服务器把公钥A明文给传输浏览器。
+ * 浏览器随机生成一个用于对称加密的密钥X，用公钥A加密后传给服务器。
+ * 服务器拿到后用私钥A’解密得到密钥X。
+ * 这样双方就都拥有密钥X了，且别人无法知道它。之后双方所有数据都通过密钥X加密解密即可。
+
+讲讲你“xxxx”这个项目
+项目优化(体积、性能、webpack、vite)
+
+其他部分 1.平时怎么学习技术? 2.愿意学习 flutter 和 react 吗? 3.你还有什么要问的吗?
