@@ -1,4 +1,35 @@
-1. 请先做一下自我介绍
+自我介绍
+
+1.  阐述-下盒子模刑
+    width padding border margin
+
+        IE怪异模式
+        content包括width、padding、border
+
+        box-sizing: content-box / border-box(IE)
+
+2.  什么是 BFC?BFC 有什么作用?什么情况下会触发 BFC?
+    块级格式化上下文,是一个独立的渲染区域，只有 Block-level box 参与， 它规定了内部的 Block-level Box 如何布局，不影响外部区域。
+
+BFC 就是页面上的一个隔离的独立容器，容器里面的子元素不会影响到外面的元素。
+
+如何触发创建 BFC
+float 的值不是 none。
+position 的值不是 static 或者 relative。
+display 的值是 inline-block、table-cell、flex、table-caption 或者 inline-flex
+overflow 的值不是 visible
+
+3. 怎样处理 移动端 1px 被 渲染成 2px 问题？
+   局部处理
+   meta 标签中的 viewport 属性 ，initial-scale 设置为 1
+   rem 按照设计稿标准走，外加利用 transfrome 的 scale(0.5) 缩小一倍即可；
+   全局处理
+   mate 标签中的 viewport 属性 ，initial-scale 设置为 0.5
+   rem 按照设计稿标准走即可
+
+基础
+
+1. 跨域 / promise
 2. es6 的解构赋值-数组、对象
    ES6 允许按照一定模式，从数组和对象中提取值，对变量进行赋值，这被称为解构
    数组中的值会自动被解析到对应接收该值的变量中，数组的解构赋值要一一对应 如果有对应不上的就是 undefined
@@ -80,8 +111,7 @@ function newInstanceOf(left, right) {
     }
 }
 
-5. 什么是闭包，有什么用?平时有用过吗?能举
-   例说明吗?
+5. 什么是闭包，有什么用?平时有用过吗?能举例说明吗?
    能够读取其他函数内部变量的函数。只有函数内部的子函数才能读取局部变量，所以闭包可以理解成“定义在一个函数内部的函数“。在本质上，闭包是将函数内部和函数外部连接起来的桥梁。
 
 其实就是将作用域链延伸，不释放能够使用。
@@ -195,35 +225,6 @@ js 任务分为：同步任务、异步任务。同步任务依次进入执行�
     	}
     }
 
-css 部分
-
-1.  阐述-下盒子模刑
-    width padding border margin
-
-        IE怪异模式
-        content包括width、padding、border
-
-        box-sizing: content-box / border-box(IE)
-
-2.  什么是 BFC?BFC 有什么作用?什么情况下会触发 BFC?
-    块级格式化上下文,是一个独立的渲染区域，只有 Block-level box 参与， 它规定了内部的 Block-level Box 如何布局，不影响外部区域。
-
-BFC 就是页面上的一个隔离的独立容器，容器里面的子元素不会影响到外面的元素。
-
-如何触发创建 BFC
-float 的值不是 none。
-position 的值不是 static 或者 relative。
-display 的值是 inline-block、table-cell、flex、table-caption 或者 inline-flex
-overflow 的值不是 visible
-
-3. 怎样处理 移动端 1px 被 渲染成 2px 问题？
-   局部处理
-   meta 标签中的 viewport 属性 ，initial-scale 设置为 1
-   rem 按照设计稿标准走，外加利用 transfrome 的 scale(0.5) 缩小一倍即可；
-   全局处理
-   mate 标签中的 viewport 属性 ，initial-scale 设置为 0.5
-   rem 按照设计稿标准走即可
-
 vue 部分
 
 1. 为什么 vue2 组件中的 data 是一个函数?
@@ -300,35 +301,42 @@ patch(root, patches)
 - 改成 history 模式非常简单，只需要将路由的 mode 类型改成 history 即可。在 src/router/index.js 中
   new Router({ mode: "history"})
 
-6. vuex 用过吗?讲一下具体使用流程，知道原理吗?(redux 流程、dva)
-vuex的组成部分：
-  state:是存储的基本数据。
-  mutations:提交更改数据。
-  getter:对state加工，和computed计算属性一样。
-  actions：处理异步，通过store.commit方法触发mutations中的方法，从而改变state值。
-  module：是store分割的模块，每个模块拥有自己的state、mutations、getters、actions。
+# $route $router
 
-- vuex是针对vuejs的状态管理工具。vuex完美的结合了vue的响应式数据。
-- vue可以直接触发methods中的方法，vuex不行。为了处理异步，当你触发一个点击事件时，会通过dispatch来访问actions中的方法，actions中的commit会触发mutations中的方法从而修改state的值，通过getters来把数据反映到视图。
-- vuex通过Vue.use(vuex)，从而调用install方法，通过applyMixin(Vue)在任意组件执行this.$store都能访问到store对象，实现将store挂载注入到组件中。
-- vuex的state状态是响应式的，是借助vue的data是响应式，将state存入vue实例组件的data中。
-- vuex的getters则是借助于vue的计算属性computed实现数据的实时监听。
+$route 是“路由信息对象”，包括 path，params，hash，query，fullPath，matched，name 等路由信息参数。
+$router 是“路由实例”对象包括了路由的跳转方法，钩子函数等
+
+6. vuex 用过吗?讲一下具体使用流程，知道原理吗?(redux 流程、dva)
+   vuex 的组成部分：
+   state:是存储的基本数据。
+   mutations:提交更改数据。
+   getter:对 state 加工，和 computed 计算属性一样。
+   actions：处理异步，通过 store.commit 方法触发 mutations 中的方法，从而改变 state 值。
+   module：是 store 分割的模块，每个模块拥有自己的 state、mutations、getters、actions。
+
+- vuex 是针对 vuejs 的状态管理工具。vuex 完美的结合了 vue 的响应式数据。
+- vue 可以直接触发 methods 中的方法，vuex 不行。为了处理异步，当你触发一个点击事件时，会通过 dispatch 来访问 actions 中的方法，actions 中的 commit 会触发 mutations 中的方法从而修改 state 的值，通过 getters 来把数据反映到视图。
+- vuex 通过 Vue.use(vuex)，从而调用 install 方法，通过 applyMixin(Vue)在任意组件执行 this.$store 都能访问到 store 对象，实现将 store 挂载注入到组件中。
+- vuex 的 state 状态是响应式的，是借助 vue 的 data 是响应式，将 state 存入 vue 实例组件的 data 中。
+- vuex 的 getters 则是借助于 vue 的计算属性 computed 实现数据的实时监听。
 
 7. vue-cli 的实现原理
    Vue CLI 是一个基于 Vue.js 进行快速开发的完整系统，提供了终端命令行工具、零配置脚手架、插件体系、图形化管理界面等。
 
 8. 路由守卫
-路由守卫是路由在跳转前、后过程中的一些钩子函数，就是路由跳转的一些验证
+   路由守卫是路由在跳转前、后过程中的一些钩子函数，就是路由跳转的一些验证
 
-路由守卫总共有7个
+路由守卫总共有 7 个
+
 - 全局路由守卫:
-beforeEach 前置守卫
-affterEach 后置守卫
-beforeResolve 解析守卫
+  beforeEach 前置守卫
+  affterEach 后置守卫
+  beforeResolve 解析守卫
 - 路由的守卫（组件内部守卫）
-beforeRouterEnter 进入组件之前触发,在Created前面
-beforeRouterUpdated 路由更新但是内容不会改变
-beforeRouterLeave 离开之前触发,在beforeDestory之前触发
+  beforeRouterEnter 进入组件之前触发,在 Created 前面
+  beforeRouterUpdated 路由更新但是内容不会改变
+  beforeRouterLeave 离开之前触发,在 beforeDestory 之前触发
+
 ```js
  // 和data、created、mounted平级
  beforeRouteEnter(to, from, next) {
@@ -352,8 +360,10 @@ beforeRouterLeave 离开之前触发,在beforeDestory之前触发
     // 可以访问组件实例 `this`
   },
 ```
+
 - 路由独享守卫（单个路由守卫）
-beforeEnter 读取路由的信息
+  beforeEnter 读取路由的信息
+
 ```js
  // 首页模块路由
   {
@@ -373,47 +383,49 @@ beforeEnter 读取路由的信息
 ```
 
 所有路由守卫都是三个参数
-  to去哪儿 from从哪来  next要不要继续下一步
+to 去哪儿 from 从哪来 next 要不要继续下一步
 
 9. ts 有了解过吗?(Pick 的实现)
-ts常用的内置工具类型（Record、Partial 、 Required 、 Readonly、 Pick 、 Exclude 、 Extract 、 Omit
+   ts 常用的内置工具类型（Record、Partial 、 Required 、 Readonly、 Pick 、 Exclude 、 Extract 、 Omit
 
-Pick 类型用于从T类型中选择部分属性K来构造新的类型
+Pick 类型用于从 T 类型中选择部分属性 K 来构造新的类型
 主要的逻辑就是如何利用泛型和联合类型，来动态的从一个已知的类型中，提取出它的子集。
 
 Omit 与 Pick 作用相似，只不过 Omit 是：以一个类型为基础支持剔除某些属性，然后返回一个新类型。
 
-网络部分
-1.http 位于七层网络模型哪一层?(了解过 http2.0和 http3.0 吗?)
+10. http 位于七层网络模型哪一层?(了解过 http2.0 和 http3.0 吗?)
+    物数网传会表应，应用层有各种面向具体应用的协议。例如 Telnet、SSH、FTP、SMTP 、HTTP 等。
+11. https 的加密原理(对称加密算法和非对称加密算法)
 
-2.https 的加密原理(对称加密算法和非对称加密算法)
 - 为什么需要加密？
-因为http的内容是明文传输的，明文数据会经过中间代理服务器、路由器、wifi热点、通信服务运营商等多个物理节点，如果信息在传输过程中被劫持，传输的内容就完全暴露了。劫持者还可以篡改传输的信息且不被双方察觉，这就是中间人攻击。所以我们才需要对信息进行加密。最容易理解的就是对称加密 
+  因为 http 的内容是明文传输的，明文数据会经过中间代理服务器、路由器、wifi 热点、通信服务运营商等多个物理节点，如果信息在传输过程中被劫持，传输的内容就完全暴露了。劫持者还可以篡改传输的信息且不被双方察觉，这就是中间人攻击。所以我们才需要对信息进行加密。最容易理解的就是对称加密
 - 对称加密
-简单说就是有一个密钥，它可以加密一段信息，也可以对加密后的信息进行解密，和我们日常生活中用的钥匙作用差不多。
-最大的问题就是这个密钥怎么让传输的双方知晓，同时不被别人知道。如果由服务器生成一个密钥并传输给浏览器，那在这个传输过程中密钥被别人劫持到手了怎么办？之后他就能用密钥解开双方传输的任何内容了，所以这么做当然不行。
+  简单说就是有一个密钥，它可以加密一段信息，也可以对加密后的信息进行解密，和我们日常生活中用的钥匙作用差不多。
+  最大的问题就是这个密钥怎么让传输的双方知晓，同时不被别人知道。如果由服务器生成一个密钥并传输给浏览器，那在这个传输过程中密钥被别人劫持到手了怎么办？之后他就能用密钥解开双方传输的任何内容了，所以这么做当然不行。
 
 - 非对称加密
-简单说就是有两把密钥，通常一把叫做公钥、一把叫私钥，用公钥加密的内容必须用私钥才能解开，同样，私钥加密的内容只有公钥能解开。
-一组公钥私钥，可以保证单向保密；
+  简单说就是有两把密钥，通常一把叫做公钥、一把叫私钥，用公钥加密的内容必须用私钥才能解开，同样，私钥加密的内容只有公钥能解开。
+  一组公钥私钥，可以保证单向保密；
 
 两组公钥私钥，是否就能保证双向传输都安全了？请看下面的过程：
- * 某网站服务器拥有公钥A与对应的私钥A’；浏览器拥有公钥B与对应的私钥B’。
- * 浏览器把公钥B明文传输给服务器。
- * 服务器把公钥A明文给传输浏览器。
- * 之后浏览器向服务器传输的内容都用公钥A加密，服务器收到后用私钥A’解密。由于只有服务器拥有私钥A’，所以能保证这条数据的安全。
- * 同理，服务器向浏览器传输的内容都用公钥B加密，浏览器收到后用私钥B’解密。同上也可以保证这条数据的安全。
 
-- 非对称、对称结合
-既然非对称加密耗时，那非对称加密+对称加密结合可以吗？而且得尽量减少非对称加密的次数。当然是可以的，且非对称加密、解密各只需用一次即可。
-请看一下这个过程：
- * 某网站拥有用于非对称加密的公钥A、私钥A’。
- * 浏览器向网站服务器请求，服务器把公钥A明文给传输浏览器。
- * 浏览器随机生成一个用于对称加密的密钥X，用公钥A加密后传给服务器。
- * 服务器拿到后用私钥A’解密得到密钥X。
- * 这样双方就都拥有密钥X了，且别人无法知道它。之后双方所有数据都通过密钥X加密解密即可。
+- 某网站服务器拥有公钥 A 与对应的私钥 A’；浏览器拥有公钥 B 与对应的私钥 B’。
+- 浏览器把公钥 B 明文传输给服务器。
+- 服务器把公钥 A 明文给传输浏览器。
+- 之后浏览器向服务器传输的内容都用公钥 A 加密，服务器收到后用私钥 A’解密。由于只有服务器拥有私钥 A’，所以能保证这条数据的安全。
+- 同理，服务器向浏览器传输的内容都用公钥 B 加密，浏览器收到后用私钥 B’解密。同上也可以保证这条数据的安全。
+
+* 非对称、对称结合
+  既然非对称加密耗时，那非对称加密+对称加密结合可以吗？而且得尽量减少非对称加密的次数。当然是可以的，且非对称加密、解密各只需用一次即可。
+  请看一下这个过程：
+
+- 某网站拥有用于非对称加密的公钥 A、私钥 A’。
+- 浏览器向网站服务器请求，服务器把公钥 A 明文给传输浏览器。
+- 浏览器随机生成一个用于对称加密的密钥 X，用公钥 A 加密后传给服务器。
+- 服务器拿到后用私钥 A’解密得到密钥 X。
+- 这样双方就都拥有密钥 X 了，且别人无法知道它。之后双方所有数据都通过密钥 X 加密解密即可。
 
 讲讲你“xxxx”这个项目
 项目优化(体积、性能、webpack、vite)
 
-其他部分 1.平时怎么学习技术? 2.愿意学习 flutter 和 react 吗? 3.你还有什么要问的吗?
+其他部分 1.平时怎么学习技术? 2. 你还有什么要问的吗?
